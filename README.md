@@ -14,10 +14,10 @@ perl getBamDepth.pl --bed regions.bed --bam sample.bam --thresholds 10,30,50
 
 ## Options
 
-- `--bed BED_FILE`: Path to the BED file (0 based). This is a required option.
-- `--bam BAM_FILE`: Path to the BAM file. Either this option or `--depth` must be provided.
-- `--depth DEPTH_FILE`: Path to the pre-calculated depth file. Either this option or `--bam` must be provided.
-- `--thresholds THRESHOLDS`: Comma-separated list of depth thresholds. The script will calculate the number of bases in each region that meet each threshold. Default thresholds are 10, 20, 30, 40, 50, 60, 70, 80, 90, 100.
+- `--bed BED_FILE`: This is a mandatory parameter. It specifies the path to the BED file, which uses a 0-based index.
+- `--bam BAM_FILE`: This parameter is used to provide the path to the BAM file. Please ensure that the BAM file is indexed before using it. You must provide either this parameter or the `--depth` parameter.
+- `--depth DEPTH_FILE`: This parameter is used to specify the path to a depth file that has been pre-calculated using the `samtools depth` command. You must provide either this parameter or the `--bam` parameter.
+- `--thresholds THRESHOLDS`: This parameter is used to specify a list of depth thresholds, separated by commas. The script will then calculate the number of bases in each region that meet each of these thresholds. If not provided, the default thresholds used are 10, 20, 30, 40, 50, 60, 70, 80, 90, 100.
 
 ## Output
 
