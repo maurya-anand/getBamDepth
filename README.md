@@ -1,13 +1,13 @@
 # getBamDepth
 
-This Perl script calculates the average depth of coverage for regions specified in a BED file. The depth of coverage can be calculated from a BAM/SAM/CRAM file using `samtools` or from a pre-calculated depth file. The script also calculates the number of bases in each region that meet certain depth thresholds.
+This tool calculates the average depth of coverage for regions specified in a BED file. The depth of coverage can be calculated from a BAM/SAM/CRAM file using `samtools` or from a pre-calculated depth file. The script also calculates the number of bases in each region that meet certain depth thresholds.
 
 > [!IMPORTANT]  
 > Please make sure to install the dependencies listed below.
 
 ## Requirements
 
-This command changes the permissions of the `getBamDepth.pl` script to allow it to be executed.
+This command changes the permissions of the `getBamDepth` script to allow it to be executed.
 
 The script also requires the following:
 
