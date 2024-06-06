@@ -3,7 +3,6 @@
 use strict;
 use warnings;
 use Getopt::Long;
-use Data::Dumper;
 use File::Basename;
 
 my ($input_bed, $input_bam, $input_depth, $thresholds_str);
