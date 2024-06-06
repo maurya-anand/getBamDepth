@@ -42,6 +42,7 @@ chmod a+x ./getBamDepth
   |------|-------|-------|------|---|---|
   | chr1 | 631032| 636027| Gene1| . | + |
   | chrM | 5922  | 6115  | Gene2| . | + |
+  
 - `--bam BAM_FILE`: This parameter is used to provide the path to the input file, which can be a BAM, SAM, or CRAM file. Please ensure that the input file is indexed before using it. Use `samtools index -b BAM_FILE` command to create an index. You must provide either this parameter or the `--depth` parameter.
 - `--depth DEPTH_FILE`: This parameter is used to specify the path to a depth file that has been pre-calculated using the `samtools depth` command. You must provide either this parameter or the `--bam` parameter.
 - `--thresholds THRESHOLDS`: This parameter is used to specify a list of depth thresholds, separated by commas. The script will then calculate the number of bases in each region that meet each of these thresholds. If not provided, the default thresholds used are 10, 20, 30, 40, 50, 60, 70, 80, 90, 100.
