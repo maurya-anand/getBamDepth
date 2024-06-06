@@ -5,7 +5,11 @@ This Perl script calculates the average depth of coverage for regions specified 
 > [!IMPORTANT]  
 > Please make sure to install the dependencies listed below.
 
-## Dependencies
+## Requirements
+
+This command changes the permissions of the `getBamDepth.pl` script to allow it to be executed.
+
+The script also requires the following:
 
 - Perl5
   - Getopt::Long
@@ -15,12 +19,19 @@ This Perl script calculates the average depth of coverage for regions specified 
 
 ## Usage
 
+> [!NOTE]  
+> Before running the script, make sure it is executable.
+
 ```bash
-perl getBamDepth.pl --bed BED_FILE [--bam BAM_FILE | --depth DEPTH_FILE] [--thresholds THRESHOLDS]
+chmod a+x ./getBamDepth
 ```
 
 ```bash
-perl getBamDepth.pl --bed regions.bed --bam sample.bam --thresholds 10,30,50
+getBamDepth --bed BED_FILE [--bam BAM_FILE | --depth DEPTH_FILE] [--thresholds THRESHOLDS]
+```
+
+```bash
+getBamDepth --bed regions.bed --bam sample.bam --thresholds 10,30,50
 ```
 
 ## Options
