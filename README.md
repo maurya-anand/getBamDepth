@@ -41,4 +41,3 @@ The script outputs a tab-delimited table to standard output. The columns of the 
 - `region`: The name of the region.
 - `avg_depth`: The average depth of coverage for the region.
 - `10x`, `20x`, ..., `100x`: The number of bases in the region that meet each depth threshold.
-
