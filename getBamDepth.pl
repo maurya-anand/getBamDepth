@@ -7,6 +7,8 @@ use File::Basename;
 
 my ($input_bed, $input_bam, $input_depth, $thresholds_str);
 
+my $num_args = scalar @ARGV;
+
 GetOptions(
     'bed=s'       => \$input_bed,
     'bam=s'       => \$input_bam,
@@ -14,9 +16,13 @@ GetOptions(
     'thresholds=s' => \$thresholds_str,
 ) or die "Usage: $0 --bed BED_FILE [--bam BAM_FILE | --depth DEPTH_FILE] [--thresholds THRESHOLDS]\n";
 
+if ($num_args == 0) {
+    print "Usage: $0 --bed BED_FILE [--bam BAM_FILE | --depth DEPTH_FILE] [--thresholds THRESHOLDS]\n";
+    exit;
+}
+
 die "Bed file is required\n" unless $input_bed;
 die "Bed file does not exist: $input_bed\n" unless -e $input_bed;
-
 die "Either bam or depth file is required\n" unless $input_bam || $input_depth;
 die "Bam file does not exist: $input_bam\n" if $input_bam && !-e $input_bam;
 die "Depth file does not exist: $input_depth\n" if $input_depth && !-e $input_depth;
@@ -53,10 +59,8 @@ foreach my $result (@results) {
 sub get_depth {
     my ($chr, $start, $end, $depth, @thresholds) = @_;
     open (DEP, $depth) or die "Can't open $depth: $!";
-    
     my ($sum, $count) = (0, 0);
     my @counters = (0) x scalar @thresholds;
-
     while (my $line = <DEP>) {
         chomp $line;
         my @fields = split /\t/, $line;
@@ -72,8 +76,6 @@ sub get_depth {
         }
     }
     close DEP;
-    
     my $avg_depth = $count > 0 ? sprintf("%.2f", $sum / $count) : "0";
     return ($avg_depth, @counters);
 }
-
