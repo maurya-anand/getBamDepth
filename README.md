@@ -7,10 +7,6 @@ This tool calculates the average depth of coverage for regions specified in a BE
 
 ## Requirements
 
-This command changes the permissions of the `getBamDepth` script to allow it to be executed.
-
-The script also requires the following:
-
 - Perl5
 - [samtools](https://www.htslib.org/) (if using the `--bam` option)
 
@@ -24,11 +20,11 @@ chmod a+x ./getBamDepth
 ```
 
 ```bash
-getBamDepth --bed BED_FILE [--bam BAM_FILE | --depth DEPTH_FILE] [--thresholds THRESHOLDS]
+./getBamDepth --bed BED_FILE [--bam BAM_FILE | --depth DEPTH_FILE] [--thresholds THRESHOLDS]
 ```
 
 ```bash
-getBamDepth --bed regions.bed --bam sample.bam --thresholds 10,30,50
+./getBamDepth --bed regions.bed --bam sample.bam --thresholds 10,30,50
 ```
 
 ## Options
