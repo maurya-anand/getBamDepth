@@ -10,7 +10,7 @@ This tool calculates the average depth of coverage for regions specified in a BE
 - Perl5
 - [samtools](https://www.htslib.org/) (if using the `--bam` option)
 
-## Usage
+## Example Usage
 
 > [!NOTE]  
 > Before running the script, make sure it is executable.
@@ -24,19 +24,37 @@ chmod a+x ./getBamDepth
 ```
 
 ```bash
-./getBamDepth --bed regions.bed --bam sample.bam --thresholds 10,30,50
+./getBamDepth --bed example/example-targets.bed --depth example/sample.depth
 ```
 
-## Options
+```bash
+./getBamDepth --bed example/example-targets.bed --bam example/sample.cram
+```
 
-- `--bed BED_FILE`: This is a mandatory parameter. It specifies the path to the BED file, which uses a 0-based index.
+```bash
+./getBamDepth --bed example/example-targets.bed --bam example/sample.bam --thresholds 10,50
+```
+
+## Inputs
+
+- `--bed BED_FILE`: This is a mandatory parameter. It specifies the path to the BED file, which uses a 0-based index. Example: `example/example-targets.bed`
+  |      |       |       |      |   |   |
+  |------|-------|-------|------|---|---|
+  | chr1 | 631032| 636027| Gene1| . | + |
+  | chrM | 5922  | 6115  | Gene2| . | + |
 - `--bam BAM_FILE`: This parameter is used to provide the path to the input file, which can be a BAM, SAM, or CRAM file. Please ensure that the input file is indexed before using it. Use `samtools index -b BAM_FILE` command to create an index. You must provide either this parameter or the `--depth` parameter.
 - `--depth DEPTH_FILE`: This parameter is used to specify the path to a depth file that has been pre-calculated using the `samtools depth` command. You must provide either this parameter or the `--bam` parameter.
 - `--thresholds THRESHOLDS`: This parameter is used to specify a list of depth thresholds, separated by commas. The script will then calculate the number of bases in each region that meet each of these thresholds. If not provided, the default thresholds used are 10, 20, 30, 40, 50, 60, 70, 80, 90, 100.
 
 ## Output
 
-The script outputs a tab-delimited table to standard output. The columns of the table are:
+The script outputs a tab-delimited table to standard output. Example: `example/sample.coverage.out.txt`
+  | sample | chrom | start  | end    | region | avg_depth | 10x | 20x | 30x | 40x | 50x | 60x | 70x | 80x | 90x | 100x |
+  |--------|-------|--------|--------|--------|-----------|-----|-----|-----|-----|-----|-----|-----|-----|-----|------|
+  | sample | chr1  | 631033 | 636027 | Gene1  | 187.22    | 928 | 701 | 540 | 509 | 473 | 359 | 306 | 295 | 292 | 290  |
+  | sample | chrM  | 5923   | 6115   | Gene2  | 614.41    | 193 | 193 | 172 | 155 | 148 | 141 | 138 | 135 | 134 | 131  |
+
+The columns of the table are:
 
 - `sample`: The name of the sample, derived from the BAM or depth file name.
 - `chrom`: The chromosome of the region.
