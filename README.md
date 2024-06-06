@@ -12,10 +12,7 @@ This command changes the permissions of the `getBamDepth` script to allow it to 
 The script also requires the following:
 
 - Perl5
-  - Getopt::Long
-  - File::Basename
-  - Data::Dumper
-- samtools (if using the `--bam` option)
+- [samtools](https://www.htslib.org/) (if using the `--bam` option)
 
 ## Usage
 
@@ -52,3 +49,7 @@ The script outputs a tab-delimited table to standard output. The columns of the 
 - `region`: The name of the region.
 - `avg_depth`: The average depth of coverage for the region.
 - `10x`, `20x`, ..., `100x`: The number of bases in the region that meet each depth threshold.
+
+## Refernce
+
+- Danecek P, Bonfield JK, Liddle J, Marshall J, Ohan V, Pollard MO, Whitwham A, Keane T, McCarthy SA, Davies RM, Li H, **Twelve years of SAMtools and BCFtools**, GigaScience (2021) 10(2) giab008 [[33590861]](https://pubmed.ncbi.nlm.nih.gov/33590861)
