@@ -50,8 +50,6 @@ foreach my $result (@results) {
     print join("\t", @$result) . "\n";
 }
 
-system("rm $input_depth");
-
 sub get_depth {
     my ($chr, $start, $end, $depth, @thresholds) = @_;
     open (DEP, $depth) or die "Can't open $depth: $!";
