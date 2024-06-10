@@ -38,7 +38,7 @@ if ($input_bam) {
     $sample = fileparse($input_depth, qr/\.[^.]*/);
 }
 
-my @header = ("sample", "chrom", "start", "end", "region", "avg_depth", map { $_ . "x" } @thresholds);
+my @header = ("ID", "chrom", "start", "end", "total_bases", "region", "avg_depth", map { $_ . "x" } @thresholds);
 my @results;
 
 open (BED, $input_bed) or die "Can't read the bed file: $input_bed";
@@ -47,7 +47,8 @@ while (my $rec = <BED>) {
     my ($chr, $start, $end, $info, $temp, $strand) = split(/\t/, $rec);
     $start += 1;
     my @depths = get_depth($chr, $start, $end, $input_depth, @thresholds);
-    push @results, ["$sample", $chr, $start, $end, $info // "unknown", @depths];
+    my $total_bases = $end - $start + 1;
+    push @results, ["$sample", $chr, $start, $end, $total_bases, $info // "unknown", @depths];
 }
 close BED;
 
