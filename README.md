@@ -32,7 +32,7 @@ chmod a+x ./getBamDepth
 ```
 
 ```bash
-./getBamDepth --bed example/example-targets.bed --bam example/sample.bam --thresholds 10,50
+./getBamDepth --bed example/example-targets.bed --bam example/sample.bam --thresholds 5,10
 ```
 
 ## Inputs
@@ -45,15 +45,15 @@ chmod a+x ./getBamDepth
   
 - `--bam BAM_FILE`: This parameter is used to provide the path to the input file, which can be a BAM, SAM, or CRAM file. Please ensure that the input file is indexed before using it. Use `samtools index -b BAM_FILE` command to create an index. You must provide either this parameter or the `--depth` parameter.
 - `--depth DEPTH_FILE`: This parameter is used to specify the path to a depth file that has been pre-calculated using the `samtools depth` command. You must provide either this parameter or the `--bam` parameter.
-- `--thresholds THRESHOLDS`: This parameter is used to specify a list of depth thresholds, separated by commas. The script will then calculate the number of bases in each region that meet each of these thresholds. If not provided, the default thresholds used are 10, 20, 30, 40, 50, 60, 70, 80, 90, 100.
+- `--thresholds THRESHOLDS`: This parameter is used to specify a list of depth thresholds, separated by commas. The script will then calculate the number of bases in each region that meet each of these thresholds. If not provided, the default thresholds used are 10 and 50 (`--thresholds 10,50`).
 
 ## Output
 
 The script outputs a tab-delimited table to standard output. Example: `example/sample.coverage.out.txt`
-  | ID     | chrom | start  | end    | total_bases | region | avg_depth | 10x | 20x | 30x | 40x | 50x | 60x | 70x | 80x | 90x | 100x |
-  |--------|-------|--------|--------|-------------|--------|-----------|-----|-----|-----|-----|-----|-----|-----|-----|-----|------|
-  | sample | chr1  | 631033 | 636027 | 4995        | Gene1  | 187.22    | 928 | 701 | 540 | 509 | 473 | 359 | 306 | 295 | 292 | 290  |
-  | sample | chrM  | 5923   | 6115   | 193         | Gene2  | 614.41    | 193 | 193 | 172 | 155 | 148 | 141 | 138 | 135 | 134 | 131  |
+  | ID     | chrom | start  | end    | total_bases | region | avg_depth | 10x | 50x | 10x(%) | 50x(%) |
+  |--------|-------|--------|--------|-------------|--------|-----------|-----|-----|--------|--------|
+  | sample | chr1  | 631033 | 636027 | 4995        | Gene1  | 187.22    | 928 | 473 | 18.58  | 9.47   |
+  | sample | chrM  | 5923   | 6115   | 193         | Gene2  | 614.41    | 193 | 148 | 100.00 | 76.68  |
 
 The columns of the table are:
 
@@ -61,9 +61,11 @@ The columns of the table are:
 - `chrom`: The chromosome of the region.
 - `start`: The start position of the region.
 - `end`: The end position of the region.
+- `total_bases`: The total number of bases in the region. This is calculated from the 0-based bed file (`end - start + 1`).
 - `region`: The name of the region.
 - `avg_depth`: The average depth of coverage for the region.
-- `10x`, `20x`, ..., `100x`: The number of bases in the region that meet each depth threshold.
+- `10x`, `50x`, ..., `100x`: The number of bases in the region that meet each depth threshold.
+- `10x(%)`, `50x(%)`, ..., `100x(%)`: The percentage of bases in the region that meet each depth threshold.
 
 ## Refernce
 
