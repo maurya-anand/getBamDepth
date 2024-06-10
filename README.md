@@ -50,10 +50,10 @@ chmod a+x ./getBamDepth
 ## Output
 
 The script outputs a tab-delimited table to standard output. Example: `example/sample.coverage.out.txt`
-  | sample | chrom | start  | end    | region | avg_depth | 10x | 20x | 30x | 40x | 50x | 60x | 70x | 80x | 90x | 100x |
-  |--------|-------|--------|--------|--------|-----------|-----|-----|-----|-----|-----|-----|-----|-----|-----|------|
-  | sample | chr1  | 631033 | 636027 | Gene1  | 187.22    | 928 | 701 | 540 | 509 | 473 | 359 | 306 | 295 | 292 | 290  |
-  | sample | chrM  | 5923   | 6115   | Gene2  | 614.41    | 193 | 193 | 172 | 155 | 148 | 141 | 138 | 135 | 134 | 131  |
+  | ID     | chrom | start  | end    | total_bases | region | avg_depth | 10x | 20x | 30x | 40x | 50x | 60x | 70x | 80x | 90x | 100x |
+  |--------|-------|--------|--------|-------------|--------|-----------|-----|-----|-----|-----|-----|-----|-----|-----|-----|------|
+  | sample | chr1  | 631033 | 636027 | 4995        | Gene1  | 187.22    | 928 | 701 | 540 | 509 | 473 | 359 | 306 | 295 | 292 | 290  |
+  | sample | chrM  | 5923   | 6115   | 193         | Gene2  | 614.41    | 193 | 193 | 172 | 155 | 148 | 141 | 138 | 135 | 134 | 131  |
 
 The columns of the table are:
 
