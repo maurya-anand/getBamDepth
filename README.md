@@ -63,9 +63,9 @@ The columns of the table are:
 - `end`: The end position of the region.
 - `total_bases`: The total number of bases in the region. This is calculated from the 0-based bed file (`end - start + 1`).
 - `region`: The name of the region.
-- `avg_depth`: The average depth of coverage for the region.
-- `10x`, `50x`, ..., `100x`: The number of bases in the region that meet each depth threshold.
-- `10x(%)`, `50x(%)`, ..., `100x(%)`: The percentage of bases in the region that meet each depth threshold.
+- `avg_depth`: This is the average depth of coverage for the region. It gives you an idea of how many times each base in the region was sequenced on average. A higher average depth means that the region was sequenced more times, which generally leads to more reliable results.
+- `10x`, `50x`, ..., `100x`: These columns represent the count of bases in the region that have been sequenced at least a certain number of times. For instance, the `10x` column indicates the number of bases that have been sequenced at least 10 times.
+- `10x(%)`, `50x(%)`, ..., `100x(%)`: These columns represent the percentage of bases in the region that have been sequenced at least a certain number of times. For example, the `10x(%)` column shows the percentage of bases that have been sequenced at least 10 times.
 
 ## Refernce
 
