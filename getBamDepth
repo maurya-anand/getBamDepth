@@ -6,7 +6,6 @@ use Getopt::Long;
 use File::Basename;
 
 my ($input_bed, $input_bam, $input_depth, $thresholds_str);
-
 my $num_args = scalar @ARGV;
 
 GetOptions(
