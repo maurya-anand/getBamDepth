@@ -6,7 +6,7 @@ on:
       - v*
 
 jobs:
-  build-and-push-image:
+  create-release:
     runs-on: ubuntu-latest
     permissions:
       contents: write
