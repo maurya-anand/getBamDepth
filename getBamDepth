@@ -6,7 +6,7 @@ use Getopt::Long;
 use File::Basename;
 use Parallel::ForkManager;
 
-my ($input_bed, $input_bam, $input_depth, $thresholds_str);
+my ($input_bed, $input_bam, $input_depth, $thresholds_str, $output_file);
 my $threads = 4;
 my $num_args = scalar @ARGV;
 
@@ -16,10 +16,11 @@ GetOptions(
     'depth=s'      => \$input_depth,
     'thresholds=s' => \$thresholds_str,
     'threads=i'    => \$threads,
-) or die "Usage: $0 --bed BED_FILE [--bam BAM_FILE | --depth DEPTH_FILE] [--thresholds THRESHOLDS] [--threads INT]\n";
+    'output=s'     => \$output_file,
+) or die "Usage: $0 --bed BED_FILE [--bam BAM_FILE | --depth DEPTH_FILE] [--thresholds THRESHOLDS] [--threads INT] [--output FILE]\n";
 
 if ($num_args == 0) {
-    print "Usage: $0 --bed BED_FILE [--bam BAM_FILE | --depth DEPTH_FILE] [--thresholds THRESHOLDS] [--threads INT]\n";
+    print "Usage: $0 --bed BED_FILE [--bam BAM_FILE | --depth DEPTH_FILE] [--thresholds THRESHOLDS] [--threads INT] [--output FILE]\n";
     exit;
 }
 
@@ -80,9 +81,18 @@ for my $i (0 .. $#regions) {
 }
 $pm->wait_all_children;
 
-print join("\t", @header) . "\n";
-for my $i (0 .. $#regions) {
-    print join("\t", @{ $results{$i} }) . "\n";
+if ($output_file) {
+    open(OUT, ">$output_file") or die "Can't open $output_file: $!";
+    print OUT join("\t", @header) . "\n";
+    for my $i (0 .. $#regions) {
+        print OUT join("\t", @{ $results{$i} }) . "\n";
+    }
+    close(OUT);
+} else {
+    print join("\t", @header) . "\n";
+    for my $i (0 .. $#regions) {
+        print join("\t", @{ $results{$i} }) . "\n";
+    }
 }
 
 sub get_depth {
