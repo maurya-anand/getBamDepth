@@ -4,19 +4,22 @@ use strict;
 use warnings;
 use Getopt::Long;
 use File::Basename;
+use Parallel::ForkManager;
 
 my ($input_bed, $input_bam, $input_depth, $thresholds_str);
+my $threads = 4;
 my $num_args = scalar @ARGV;
 
 GetOptions(
-    'bed=s'       => \$input_bed,
-    'bam=s'       => \$input_bam,
-    'depth=s'     => \$input_depth,
+    'bed=s'        => \$input_bed,
+    'bam=s'        => \$input_bam,
+    'depth=s'      => \$input_depth,
     'thresholds=s' => \$thresholds_str,
-) or die "Usage: $0 --bed BED_FILE [--bam BAM_FILE | --depth DEPTH_FILE] [--thresholds THRESHOLDS]\n";
+    'threads=i'    => \$threads,
+) or die "Usage: $0 --bed BED_FILE [--bam BAM_FILE | --depth DEPTH_FILE] [--thresholds THRESHOLDS] [--threads INT]\n";
 
 if ($num_args == 0) {
-    print "Usage: $0 --bed BED_FILE [--bam BAM_FILE | --depth DEPTH_FILE] [--thresholds THRESHOLDS]\n";
+    print "Usage: $0 --bed BED_FILE [--bam BAM_FILE | --depth DEPTH_FILE] [--thresholds THRESHOLDS] [--threads INT]\n";
     exit;
 }
 
@@ -38,47 +41,65 @@ if ($input_bam) {
     $sample = fileparse($input_depth, qr/\.[^.]*/);
 }
 
+my %depth_data;
+open(my $dfh, '<', $input_depth) or die "Can't open $input_depth: $!";
+while (my $line = <$dfh>) {
+    chomp $line;
+    my ($chr, $pos, $d) = split(/\t/, $line);
+    $depth_data{$chr}{$pos} = $d;
+}
+close $dfh;
+
 my @count_headers = map { $_ . "x" } @thresholds;
 my @percentage_headers = map { $_ . "x(%)" } @thresholds;
 my @header = ("ID", "chrom", "start", "end", "total_bases", "region", "avg_depth", @count_headers, @percentage_headers);
-my @results;
 
-open (BED, $input_bed) or die "Can't read the bed file: $input_bed";
+my @regions;
+open(BED, $input_bed) or die "Can't read the bed file: $input_bed";
 while (my $rec = <BED>) {
     chomp $rec;
     my ($chr, $start, $end, $info, $temp, $strand) = split(/\t/, $rec);
     $start += 1;
     my $total_bases = $end - $start + 1;
-    my ($avg_depth, @counters, @percentages) = get_depth($chr, $start, $end, $total_bases, $input_depth, @thresholds);
-    push @results, ["$sample", $chr, $start, $end, $total_bases, $info // "unknown", $avg_depth, @counters, @percentages];
+    push @regions, [$chr, $start, $end, $total_bases, $info // "unknown"];
 }
 close BED;
 
+my %results;
+my $pm = Parallel::ForkManager->new($threads);
+$pm->run_on_finish(sub {
+    my ($pid, $exit_code, $ident, $exit_signal, $core_dump, $data_ref) = @_;
+    $results{$ident} = $data_ref;
+});
+
+for my $i (0 .. $#regions) {
+    my ($chr, $start, $end, $total_bases, $info) = @{ $regions[$i] };
+    $pm->start($i) and next;
+    my ($avg_depth, @counters, @percentages) = get_depth($chr, $start, $end, $total_bases, \%depth_data, @thresholds);
+    $pm->finish(0, ["$sample", $chr, $start, $end, $total_bases, $info, $avg_depth, @counters, @percentages]);
+}
+$pm->wait_all_children;
+
 print join("\t", @header) . "\n";
-foreach my $result (@results) {
-    print join("\t", @$result) . "\n";
+for my $i (0 .. $#regions) {
+    print join("\t", @{ $results{$i} }) . "\n";
 }
 
 sub get_depth {
-    my ($chr, $start, $end, $total_bases,$depth, @thresholds) = @_;
-    open (DEP, $depth) or die "Can't open $depth: $!";
+    my ($chr, $start, $end, $total_bases, $depth_ref, @thresholds) = @_;
     my ($sum, $count) = (0, 0);
     my @counters = (0) x scalar @thresholds;
-    while (my $line = <DEP>) {
-        chomp $line;
-        my @fields = split /\t/, $line;
-        if ($fields[0] eq $chr && $fields[1] >= $start && $fields[1] <= $end) {
-            my $depth_val = $fields[2];
-            $sum += $depth_val;
-            $count++;
-            for my $i (0..$#thresholds) {
-                if ($depth_val >= $thresholds[$i]) {
-                    $counters[$i]++;
-                }
+    for my $pos ($start .. $end) {
+        next unless exists $depth_ref->{$chr}{$pos};
+        my $depth_val = $depth_ref->{$chr}{$pos};
+        $sum += $depth_val;
+        $count++;
+        for my $i (0..$#thresholds) {
+            if ($depth_val >= $thresholds[$i]) {
+                $counters[$i]++;
             }
         }
     }
-    close DEP;
     my $avg_depth = $count > 0 ? sprintf("%.2f", $sum / $count) : "0";
     my @percentages = map { sprintf("%.2f", ($_ / $total_bases) * 100) } @counters;
     return ($avg_depth, @counters, @percentages);
