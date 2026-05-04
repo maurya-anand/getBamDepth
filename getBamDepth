@@ -4,6 +4,7 @@ use strict;
 use warnings;
 use Getopt::Long;
 use File::Basename;
+use POSIX qw(strftime);
 use Sys::CPU;
 
 my ($input_bed, $input_bam, $input_depth, $thresholds_str, $output_file);
@@ -30,6 +31,7 @@ Parameters:
       Default: detected CPU count minus 2, minimum 1.
   --output FILE
       Write tab-delimited output to a file instead of stdout.
+      Status and progress messages are written to stderr.
 USAGE
 
 GetOptions(
@@ -41,16 +43,23 @@ GetOptions(
     'output=s'     => \$output_file,
 ) or die $usage;
 
+$SIG{__WARN__} = sub {
+    my ($message) = @_;
+    chomp $message;
+    log_warn($message);
+};
+
 if ($num_args == 0) {
     print $usage;
     exit;
 }
 
-die "Bed file is required\n" unless $input_bed;
-die "Bed file does not exist: $input_bed\n" unless -e $input_bed;
-die "Either bam or depth file is required\n" unless $input_bam || $input_depth;
-die "Bam file does not exist: $input_bam\n" if $input_bam && !-e $input_bam;
-die "Depth file does not exist: $input_depth\n" if $input_depth && !-e $input_depth;
+fatal("Bed file is required") unless $input_bed;
+fatal("Bed file does not exist: $input_bed") unless -e $input_bed;
+fatal("Either bam or depth file is required") unless $input_bam || $input_depth;
+fatal("Provide either bam or depth, not both") if $input_bam && $input_depth;
+fatal("Bam file does not exist: $input_bam") if $input_bam && !-e $input_bam;
+fatal("Depth file does not exist: $input_depth") if $input_depth && !-e $input_depth;
 
 if (!defined $threads) {
     my $cpu_count = detect_cpu_count();
@@ -59,25 +68,33 @@ if (!defined $threads) {
 }
 
 my @thresholds = $thresholds_str ? split /,/, $thresholds_str : (10, 50);
+my $thresholds_display = join(',', @thresholds);
 
-my $sample;
-if ($input_bam) {
-    $sample = fileparse($input_bam, qr/\.[^.]*/);
-} elsif ($input_depth) {
-    $sample = fileparse($input_depth, qr/\.[^.]*/);
-}
+my $sample = $input_bam
+    ? fileparse($input_bam, qr/\.[^.]*/)
+    : fileparse($input_depth, qr/\.[^.]*/);
 
 my @count_headers = map { $_ . "x" } @thresholds;
 my @percentage_headers = map { $_ . "x(%)" } @thresholds;
 my @header = ("ID", "chrom", "start", "end", "total_bases", "region", "avg_depth", @count_headers, @percentage_headers);
 
+log_run_configuration(
+    bed => $input_bed,
+    bam => $input_bam,
+    depth => $input_depth,
+    output => $output_file,
+    thresholds => $thresholds_display,
+    threads => $threads,
+);
+
 my @regions;
 my %regions_by_chr;
-open(my $bed_fh, '<', $input_bed) or die "Can't read the bed file: $input_bed";
+log_info("Loading BED file $input_bed");
+open(my $bed_fh, '<', $input_bed) or fatal("Can't read the BED file: $input_bed");
 while (my $rec = <$bed_fh>) {
     chomp $rec;
     next if $rec =~ /^\s*$/;
-    my ($chr, $start, $end, $info, $temp, $strand) = split(/\t/, $rec);
+    my ($chr, $start, $end, $info) = split(/\t/, $rec);
     my $total_bases = $end - $start;
     $start += 1;
     my $region = {
@@ -104,32 +121,36 @@ for my $chr (keys %regions_by_chr) {
 
 my $depth_fh = open_depth_fh($input_bam, $input_bed, $input_depth, $threads);
 process_depth_stream($depth_fh, \@regions, \%regions_by_chr, \@thresholds);
-close $depth_fh or die "Failed to read depth input\n";
+close $depth_fh;
 
+my $out_fh;
 if ($output_file) {
-    open(OUT, ">$output_file") or die "Can't open $output_file: $!";
-    print OUT join("\t", @header) . "\n";
-    for my $region (@regions) {
-        print OUT join("\t", format_region_output($sample, $region)) . "\n";
-    }
-    close(OUT);
+    open($out_fh, '>', $output_file) or fatal("Can't open output file $output_file: $!");
 } else {
-    print join("\t", @header) . "\n";
-    for my $region (@regions) {
-        print join("\t", format_region_output($sample, $region)) . "\n";
-    }
+    $out_fh = *STDOUT;
 }
+
+print $out_fh join("\t", @header) . "\n";
+for my $region (@regions) {
+    print $out_fh join("\t", format_region_output($sample, $region)) . "\n";
+}
+
+close $out_fh if $output_file;
+my $destination = $output_file // 'stdout';
+log_info("Done. Output file $destination");
 
 sub open_depth_fh {
     my ($bam, $bed, $depth, $thread_count) = @_;
 
     if ($bam) {
+        log_info("Starting samtools depth for BAM/CRAM input using alignment file $bam. This can take a while for large files.");
         open(my $fh, '-|', 'samtools', 'depth', '-a', '-@', $thread_count, '-b', $bed, $bam)
-            or die "Failed to run samtools depth\n";
+            or fatal("Failed to run samtools depth");
         return $fh;
     }
 
-    open(my $fh, '<', $depth) or die "Can't open $depth: $!";
+    log_info("Loading depth file $depth");
+    open(my $fh, '<', $depth) or fatal("Can't open depth file $depth: $!");
     return $fh;
 }
 
@@ -137,6 +158,7 @@ sub process_depth_stream {
     my ($depth_fh, $regions_ref, $regions_by_chr_ref, $thresholds_ref) = @_;
     my %next_region_idx;
     my %active_regions;
+    my $current_region_idx;
 
     while (my $line = <$depth_fh>) {
         chomp $line;
@@ -156,11 +178,14 @@ sub process_depth_stream {
         next unless exists $active_regions{$chr};
 
         my @still_active;
+        my $live_region_idx;
         for my $region_idx (@{ $active_regions{$chr} }) {
             my $region = $regions_ref->[$region_idx];
             next if $region->{end} < $pos;
             push @still_active, $region_idx;
             next if $region->{start} > $pos;
+
+            $live_region_idx //= $region_idx;
 
             $region->{sum} += $depth;
             for my $i (0 .. $#$thresholds_ref) {
@@ -170,6 +195,11 @@ sub process_depth_stream {
             }
         }
         $active_regions{$chr} = \@still_active;
+
+        if (defined $live_region_idx && (!defined $current_region_idx || $current_region_idx != $live_region_idx)) {
+            $current_region_idx = $live_region_idx;
+            log_info("Calculating depth for BED interval " . format_region_label($regions_ref->[$live_region_idx]));
+        }
     }
 }
 
@@ -191,6 +221,48 @@ sub format_region_output {
 }
 
 sub detect_cpu_count {
-    my $count = Sys::CPU::cpu_count();
-    return ($count && $count =~ /^\d+$/ && $count > 0) ? $count : 4;
+    return Sys::CPU::cpu_count() || 4;
+}
+
+sub log_info {
+    my ($message) = @_;
+    log_message('INFO', $message);
+}
+
+sub log_warn {
+    my ($message) = @_;
+    log_message('WARN', $message);
+}
+
+sub log_error {
+    my ($message) = @_;
+    log_message('ERROR', $message);
+}
+
+sub fatal {
+    my ($message) = @_;
+    log_error($message);
+    exit 1;
+}
+
+sub log_message {
+    my ($level, $message) = @_;
+    my $timestamp = strftime('%Y/%m/%d %H:%M:%S', localtime);
+    printf STDERR "%-5s %s > %s\n", $level, $timestamp, $message;
+}
+
+sub format_region_label {
+    my ($region) = @_;
+    return "$region->{chr}:$region->{start}-$region->{end} ($region->{info})";
+}
+
+sub log_run_configuration {
+    my (%args) = @_;
+    my $input_type = $args{bam} ? 'bam' : 'depth';
+    my $input_value = $args{bam} // $args{depth};
+    my $output_value = $args{output} // 'stdout';
+    my $message = "Parameters: --bed $args{bed} --$input_type $input_value --thresholds $args{thresholds}";
+    $message .= " --threads $args{threads}" if $args{bam};
+    $message .= " --output $output_value";
+    log_info($message);
 }
