@@ -10,7 +10,7 @@ install:
 	@chmod a+x ./getBamDepth
 	@echo "Installing samtools and perl modules via conda..."
 	@echo "Using $(CONDA) to create $(ENV_NAME) environment..."
-	@$(CONDA) create -y -n $(ENV_NAME) -c conda-forge -c bioconda samtools perl-parallel-forkmanager perl-sys-cpu
+	@$(CONDA) create -y -n $(ENV_NAME) -c conda-forge -c bioconda samtools perl-sys-cpu
 	@echo ""
 	@echo "Installation complete!"
 	@echo "Activate conda environment: conda activate $(ENV_NAME)"
