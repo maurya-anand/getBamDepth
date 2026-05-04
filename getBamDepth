@@ -5,9 +5,10 @@ use warnings;
 use Getopt::Long;
 use File::Basename;
 use Parallel::ForkManager;
+use Sys::CPU;
 
 my ($input_bed, $input_bam, $input_depth, $thresholds_str, $output_file);
-my $threads = 4;
+my $threads;
 my $num_args = scalar @ARGV;
 
 GetOptions(
@@ -30,6 +31,12 @@ die "Either bam or depth file is required\n" unless $input_bam || $input_depth;
 die "Bam file does not exist: $input_bam\n" if $input_bam && !-e $input_bam;
 die "Depth file does not exist: $input_depth\n" if $input_depth && !-e $input_depth;
 
+if (!defined $threads) {
+    my $cpu_count = detect_cpu_count();
+    $threads = $cpu_count - 2;
+    $threads = 1 if $threads < 1;
+}
+
 my @thresholds = $thresholds_str ? split /,/, $thresholds_str : (10, 50);
 
 my $sample;
@@ -37,7 +44,7 @@ if ($input_bam) {
     my $out_dirname = dirname($input_bam);
     $sample = fileparse($input_bam, qr/\.[^.]*/);
     $input_depth = "$out_dirname/$sample.depth.txt";
-    `samtools depth $input_bam > $input_depth`;
+    `samtools depth -@ $threads $input_bam > $input_depth`;
 } elsif ($input_depth) {
     $sample = fileparse($input_depth, qr/\.[^.]*/);
 }
@@ -113,4 +120,9 @@ sub get_depth {
     my $avg_depth = $count > 0 ? sprintf("%.2f", $sum / $count) : "0";
     my @percentages = map { sprintf("%.2f", ($_ / $total_bases) * 100) } @counters;
     return ($avg_depth, @counters, @percentages);
+}
+
+sub detect_cpu_count {
+    my $count = Sys::CPU::cpu_count();
+    return ($count && $count =~ /^\d+$/ && $count > 0) ? $count : 4;
 }

@@ -8,17 +8,9 @@ install:
 		exit 1; \
 	fi
 	@chmod a+x ./getBamDepth
-	@echo "Installing Perl dependencies to local user lib..."
-	@eval "$$(perl -I ~/perl5/lib/perl5 -Mlocal::lib)"; \
-	modules='Getopt::Long File::Basename'; \
-	for module in $$modules; do \
-		perl -M$$module -e 1 2>/dev/null || cpanm --local-lib=~/perl5 $$module; \
-	done
-	@echo "Finished installing Perl modules to ~/perl5"
-	@echo ""
-	@echo "Installing samtools and perl via conda..."
+	@echo "Installing samtools and perl modules via conda..."
 	@echo "Using $(CONDA) to create $(ENV_NAME) environment..."
-	@$(CONDA) create -y -n $(ENV_NAME) -c bioconda samtools perl-parallel-forkmanager
+	@$(CONDA) create -y -n $(ENV_NAME) -c conda-forge -c bioconda samtools perl-parallel-forkmanager perl-sys-cpu
 	@echo ""
 	@echo "Installation complete!"
 	@echo "Activate conda environment: conda activate $(ENV_NAME)"
@@ -30,12 +22,7 @@ uninstall:
 	fi
 	@echo "Removing conda environment $(ENV_NAME)..."
 	@$(CONDA) env remove -n $(ENV_NAME) -y
-	@echo "Uninstalling Perl dependencies..."
-	@modules='Getopt::Long File::Basename'; \
-	for module in $$modules; do \
-		perl -M$$module -e 1 2>/dev/null && (perldoc -l $$module | xargs rm -f); \
-	done
-	@echo "Finished uninstalling Perl modules and conda environment..."
+	@echo "Finished uninstalling conda environment..."
 
 .PHONY: tests
 tests:
