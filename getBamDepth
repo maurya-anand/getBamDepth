@@ -5,15 +5,12 @@ use warnings;
 use Getopt::Long;
 use File::Basename;
 use POSIX qw(strftime);
-use Sys::CPU;
 
 my ($input_bed, $input_bam, $input_depth, $thresholds_str, $output_file);
 my $threads;
 my $num_args = scalar @ARGV;
 my $log_fh = initialize_log_fh();
 
-select STDOUT;
-$| = 1;
 my $usage = <<"USAGE";
 Usage: $0 --bed BED_FILE [--bam BAM_FILE | --depth DEPTH_FILE] [--thresholds THRESHOLDS] [--threads INT] [--output FILE]
 
@@ -66,21 +63,26 @@ fatal("Bam file does not exist: $input_bam") if $input_bam && !-e $input_bam;
 fatal("Depth file does not exist: $input_depth") if $input_depth && !-e $input_depth;
 
 if (!defined $threads) {
-    my $cpu_count = detect_cpu_count();
+    my $cpu_count = get_cpu_count();
     $threads = $cpu_count - 2;
     $threads = 1 if $threads < 1;
 }
 
-my @thresholds = $thresholds_str ? split /,/, $thresholds_str : (10, 50);
+my @thresholds = sort { $a <=> $b } ($thresholds_str ? split /,/, $thresholds_str : (10, 50));
+for my $t (@thresholds) {
+    fatal("Invalid threshold '$t': must be a positive number") unless $t =~ /^\d+(?:\.\d+)?$/ && $t > 0;
+}
 my $thresholds_display = join(',', @thresholds);
 
 my $sample = $input_bam
     ? fileparse($input_bam, qr/\.[^.]*/)
     : fileparse($input_depth, qr/\.[^.]*/);
 
-my @count_headers = map { $_ . "x" } @thresholds;
-my @percentage_headers = map { $_ . "x(%)" } @thresholds;
-my @header = ("ID", "chrom", "start", "end", "total_bases", "region", "avg_depth", @count_headers, @percentage_headers);
+my @header = (
+    "ID", "chrom", "start", "end", "total_bases", "region", "avg_depth",
+    (map { $_ . "x" } @thresholds),
+    (map { $_ . "x(%)" } @thresholds),
+);
 
 log_run_configuration(
     bed => $input_bed,
@@ -98,7 +100,15 @@ open(my $bed_fh, '<', $input_bed) or fatal("Can't read the BED file: $input_bed"
 while (my $rec = <$bed_fh>) {
     chomp $rec;
     next if $rec =~ /^\s*$/;
-    my ($chr, $start, $end, $info) = split(/\t/, $rec);
+    my @fields = split(/\t/, $rec);
+    fatal("BED file format error: expected at least 3 columns (chr, start, end), got " . scalar(@fields)) unless @fields >= 3;
+    my ($chr, $start, $end, $info) = @fields;
+    $chr =~ s/\s+//g;
+    $start =~ s/\s+//g;
+    $end =~ s/\s+//g;
+    fatal("BED file format error: start must be a non-negative integer") unless $start =~ /^\d+$/;
+    fatal("BED file format error: end must be a positive integer") unless $end =~ /^\d+$/;
+    fatal("BED file format error: end must be >= start") unless $end >= $start;
     my $total_bases = $end - $start;
     $start += 1;
     my $region = {
@@ -162,12 +172,19 @@ sub process_depth_stream {
     my ($depth_fh, $regions_ref, $regions_by_chr_ref, $thresholds_ref) = @_;
     my %next_region_idx;
     my %active_regions;
-    my $current_region_idx;
+    my $last_logged_region_idx;
 
     while (my $line = <$depth_fh>) {
         chomp $line;
         next if $line =~ /^\s*$/;
-        my ($chr, $pos, $depth) = split(/\t/, $line);
+        my @fields = split(/\t/, $line);
+        fatal("Depth file format error: expected 3 columns (chr, pos, depth), got " . scalar(@fields)) unless @fields == 3;
+        my ($chr, $pos, $depth) = @fields;
+        $chr =~ s/\s+//g;
+        $pos =~ s/\s+//g;
+        $depth =~ s/\s+//g;
+        fatal("Depth file format error: position must be a positive integer") unless $pos =~ /^\d+$/ && $pos > 0;
+        fatal("Depth file format error: depth must be a non-negative integer") unless $depth =~ /^\d+$/;
         next unless exists $regions_by_chr_ref->{$chr};
 
         my $region_indexes = $regions_by_chr_ref->{$chr};
@@ -182,27 +199,29 @@ sub process_depth_stream {
         next unless exists $active_regions{$chr};
 
         my @still_active;
-        my $live_region_idx;
+        my $first_overlapping_idx;
         for my $region_idx (@{ $active_regions{$chr} }) {
             my $region = $regions_ref->[$region_idx];
             next if $region->{end} < $pos;
             push @still_active, $region_idx;
             next if $region->{start} > $pos;
 
-            $live_region_idx //= $region_idx;
+            $first_overlapping_idx //= $region_idx;
 
             $region->{sum} += $depth;
             for my $i (0 .. $#$thresholds_ref) {
                 if ($depth >= $thresholds_ref->[$i]) {
                     $region->{counters}[$i]++;
+                } else {
+                    last;
                 }
             }
         }
         $active_regions{$chr} = \@still_active;
 
-        if (defined $live_region_idx && (!defined $current_region_idx || $current_region_idx != $live_region_idx)) {
-            $current_region_idx = $live_region_idx;
-            log_info("Calculating depth for BED interval " . format_region_label($regions_ref->[$live_region_idx]));
+        if (defined $first_overlapping_idx && (!defined $last_logged_region_idx || $last_logged_region_idx != $first_overlapping_idx)) {
+            $last_logged_region_idx = $first_overlapping_idx;
+            log_info("Calculating depth for BED interval " . format_region_label($regions_ref->[$first_overlapping_idx]));
         }
     }
 }
@@ -210,7 +229,9 @@ sub process_depth_stream {
 sub format_region_output {
     my ($sample_name, $region) = @_;
     my $avg_depth = $region->{total_bases} > 0 ? sprintf("%.2f", $region->{sum} / $region->{total_bases}) : "0";
-    my @percentages = map { sprintf("%.2f", ($_ / $region->{total_bases}) * 100) } @{ $region->{counters} };
+    my @percentages = $region->{total_bases} > 0
+        ? map { sprintf("%.2f", ($_ / $region->{total_bases}) * 100) } @{ $region->{counters} }
+        : map { "0" } @{ $region->{counters} };
     return (
         $sample_name,
         $region->{chr},
@@ -224,8 +245,16 @@ sub format_region_output {
     );
 }
 
-sub detect_cpu_count {
-    return Sys::CPU::cpu_count() || 4;
+sub get_cpu_count {
+    if (open my $fh, '<', '/proc/cpuinfo') {
+        my $count = 0;
+        while (<$fh>) {
+            $count++ if /^processor\s*:/;
+        }
+        close $fh;
+        return $count if $count > 0;
+    }
+    return 1;
 }
 
 sub log_info {
