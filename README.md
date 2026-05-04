@@ -165,6 +165,13 @@ The script validates all input files and parameters:
 - Position must be a positive integer
 - Depth must be a non-negative integer
 
+**BAM/CRAM file validation:**
+- BAM/CRAM files must be **indexed** before use
+- Supported index formats: `.bai` (BAM), `.csi` (BAM), `.crai` (CRAM)
+- Create an index with: `samtools index sample.bam` or `samtools index sample.cram`
+- Missing index will cause an error: `BAM index not found (run: samtools index ...)`
+- Without an index, samtools would perform a slow linear scan of the entire file instead of seeking to target regions
+
 **Threshold validation:**
 - All thresholds must be positive numbers (integers or floats)
 - Thresholds are automatically sorted in ascending order

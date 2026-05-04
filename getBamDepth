@@ -60,6 +60,13 @@ fatal("Bed file does not exist: $input_bed") unless -e $input_bed;
 fatal("Either bam or depth file is required") unless $input_bam || $input_depth;
 fatal("Provide either bam or depth, not both") if $input_bam && $input_depth;
 fatal("Bam file does not exist: $input_bam") if $input_bam && !-e $input_bam;
+if ($input_bam) {
+    my $bai = $input_bam . ".bai";
+    my $csi = $input_bam . ".csi";
+    my $crai = $input_bam . ".crai";
+    fatal("BAM index not found (run: samtools index $input_bam)")
+        unless -e $bai || -e $csi || -e $crai;
+}
 fatal("Depth file does not exist: $input_depth") if $input_depth && !-e $input_depth;
 
 if (!defined $threads) {
