@@ -5,13 +5,12 @@
 
 This tool calculates the average depth of coverage for regions specified in a BED file. The depth of coverage can be calculated from a BAM/SAM/CRAM file using samtools or from a pre-calculated depth file. The script also calculates the number of bases in each region that meet certain depth thresholds.
 
-Supports parallel processing via configurable thread count for faster analysis on large datasets.
+Supports configurable threading for `samtools depth` to improve performance on large datasets.
 
 ## Requirements
 
 - Perl 5.10 or later
 - mamba or conda (for managing dependencies and samtools)
-- Parallel::ForkManager (installed in conda environment)
 - samtools (installed in conda environment, required for --bam option)
 
 ## Installation
@@ -23,8 +22,7 @@ make install
 ```
 
 This installs:
-- Perl dependencies (Getopt::Long, File::Basename) to ~/perl5
-- Conda environment (getbamdepth) with samtools and perl-parallel-forkmanager
+- Conda environment (`getbamdepth`) with `samtools`, `perl`, and `perl-sys-cpu`
 
 Then activate the environment:
 ```bash
@@ -35,14 +33,9 @@ conda activate getbamdepth
 
 If you prefer not to use make:
 
-1. Install Perl dependencies:
+1. Install samtools and Perl dependencies:
 ```bash
-cpanm --local-lib=~/perl5 Getopt::Long File::Basename Parallel::ForkManager
-```
-
-2. Install samtools (required for --bam option):
-```bash
-mamba create -y -n getbamdepth -c bioconda samtools perl-parallel-forkmanager
+mamba create -y -n getbamdepth -c conda-forge -c bioconda samtools perl-sys-cpu
 mamba activate getbamdepth
 ```
 
@@ -84,7 +77,7 @@ CRAM file input:
 ./getBamDepth --bed example/example-targets.bed --bam example/sample.cram
 ```
 
-BAM file with custom thresholds and parallel processing:
+BAM file with custom thresholds:
 ```bash
 ./getBamDepth --bed example/example-targets.bed --bam example/sample.bam --thresholds 5,10 --threads 4
 ```
@@ -106,11 +99,25 @@ Write output to a file instead of stdout:
   |------|-------|-------|------|---|---|
   | chr1 | 631032| 636027| Gene1| . | + |
   | chrM | 5922  | 6115  | Gene2| . | + |
+  Expected format:
+  - Tab-delimited BED file
+  - 0-based start, end-exclusive end
+  - At least 3 columns: `chrom`, `start`, `end`
+  - Column 4 is used as the region name when present
+  - The file should be sorted by chromosome and start position for best results
   
 - `--bam BAM_FILE`: Path to BAM, SAM, or CRAM file. Must be indexed (use `samtools index`). Either this or `--depth` is required.
-- `--depth DEPTH_FILE`: Path to pre-calculated depth file from `samtools depth`. Either this or `--bam` is required.
+- `--depth DEPTH_FILE`: Path to a pre-calculated depth file. Either this or `--bam` is required.
+  Expected format:
+  - Tab-delimited with 3 columns: `chrom`, `position`, `depth`
+  - `position` must be 1-based
+  - The file should be sorted by chromosome and position
+  - For best accuracy, generate it from the same BED file with:
+    ```bash
+    samtools depth -a -b targets.bed sample.bam > sample.depth
+    ```
 - `--thresholds THRESHOLDS`: Comma-separated list of depth thresholds (default: `10,50`). Example: `--thresholds 5,10,20`
-- `--threads INT`: Number of parallel threads for region processing (default: 4). Higher values speed up processing but use more CPU. Example: `--threads 8`
+- `--threads INT`: Number of threads passed to `samtools depth`. If not provided, the default is detected CPU count minus two, with a minimum of one. Example: `--threads 8`
 - `--output FILE`: Write output to a file instead of stdout. If not provided, output is printed to stdout. Example: `--output results.txt`
 
 ## Output
@@ -127,7 +134,7 @@ The columns of the table are:
 - `chrom`: The chromosome of the region.
 - `start`: The start position of the region.
 - `end`: The end position of the region.
-- `total_bases`: The total number of bases in the region. This is calculated from the 0-based bed file (`end - start + 1`).
+- `total_bases`: The total number of bases in the region. This is calculated from the 0-based BED interval as `end - start`.
 - `region`: The name of the region.
 - `avg_depth`: This is the average depth of coverage for the region. It gives you an idea of how many times each base in the region was sequenced on average. A higher average depth means that the region was sequenced more times, which generally leads to more reliable results.
 - `10x`, `50x`, ..., `100x`: These columns represent the count of bases in the region that have been sequenced at least a certain number of times. For instance, the `10x` column indicates the number of bases that have been sequenced at least 10 times.
