@@ -10,9 +10,8 @@ use Sys::CPU;
 my ($input_bed, $input_bam, $input_depth, $thresholds_str, $output_file);
 my $threads;
 my $num_args = scalar @ARGV;
+my $log_fh = initialize_log_fh();
 
-select STDERR;
-$| = 1;
 select STDOUT;
 $| = 1;
 my $usage = <<"USAGE";
@@ -36,7 +35,7 @@ Parameters:
       Default: detected CPU count minus 2, minimum 1.
   --output FILE
       Write tab-delimited output to a file instead of stdout.
-      Status and progress messages are written to stderr.
+      Status and progress messages are written to the terminal when available.
 USAGE
 
 GetOptions(
@@ -253,7 +252,7 @@ sub fatal {
 sub log_message {
     my ($level, $message) = @_;
     my $timestamp = strftime('%Y/%m/%d %H:%M:%S', localtime);
-    printf STDERR "%-5s %s > %s\n", $level, $timestamp, $message;
+    printf {$log_fh} "%-5s %s > %s\n", $level, $timestamp, $message;
 }
 
 sub format_region_label {
@@ -270,4 +269,18 @@ sub log_run_configuration {
     $message .= " --threads $args{threads}" if $args{bam};
     $message .= " --output $output_value";
     log_info($message);
+}
+
+sub initialize_log_fh {
+    my $fh = *STDOUT;
+
+    if (-t STDOUT && open(my $tty_fh, '>', '/dev/tty')) {
+        $fh = $tty_fh;
+    }
+
+    my $previous = select $fh;
+    $| = 1;
+    select $previous;
+
+    return $fh;
 }
