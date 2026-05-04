@@ -22,21 +22,41 @@ make install
 ```
 
 This installs:
-- Conda environment (`getbamdepth`) with `samtools`, `perl`, and `perl-sys-cpu`
+- Conda environment (`bd-env`) with `samtools` and `perl`
 
 Then activate the environment:
+
 ```bash
-conda activate getbamdepth
+conda activate bd-env
+```
+
+Now you can call `getBamDepth` directly from anywhere (when the environment is active):
+
+### Uninstall
+
+To remove the conda environment:
+
+```bash
+make uninstall
+```
+
+Or manually:
+```bash
+conda env remove -n bd-env
 ```
 
 ### Manual Installation
 
-If you prefer not to use make:
+If you prefer not to use conda/mamba, install the required dependencies yourself:
 
-1. Install samtools and Perl dependencies:
+**Required:**
+- **Perl 5.10+** — includes all necessary modules: strict, warnings, Getopt::Long, File::Basename, POSIX
+- **samtools** — for BAM/CRAM/SAM processing (optional if using `--depth` only)
+
+Then run the script directly from the project directory:
+
 ```bash
-mamba create -y -n getbamdepth -c conda-forge -c bioconda samtools perl-sys-cpu
-mamba activate getbamdepth
+./getBamDepth --bed BED_FILE [--bam BAM_FILE | --depth DEPTH_FILE]
 ```
 
 > [!NOTE]
@@ -47,49 +67,54 @@ mamba activate getbamdepth
 Run the test suite to verify the installation:
 
 ```bash
-make tests
+make test
 ```
-
-This runs three test cases covering depth file input, BAM/CRAM input, and custom thresholds.
 
 ## Example Usage
 
-If using the conda environment:
+**Option 1: Activate the environment first**
+
 ```bash
-mamba run -n getbamdepth ./getBamDepth --bed BED_FILE [--bam BAM_FILE | --depth DEPTH_FILE] [--thresholds THRESHOLDS] [--threads INT] [--output FILE]
+conda activate bd-env
+getBamDepth --bed BED_FILE [--bam BAM_FILE | --depth DEPTH_FILE] [--thresholds THRESHOLDS] [--threads INT] [--output FILE]
 ```
 
-Or activate the environment first:
+**Option 2: Run directly without activating**
+
 ```bash
-conda activate getbamdepth
-./getBamDepth --bed BED_FILE [--bam BAM_FILE | --depth DEPTH_FILE] [--thresholds THRESHOLDS] [--threads INT] [--output FILE]
+mamba run -n bd-env getBamDepth --bed BED_FILE [--bam BAM_FILE | --depth DEPTH_FILE] [--thresholds THRESHOLDS] [--threads INT] [--output FILE]
 ```
 
 ### Examples
 
 Depth file input with default thresholds:
+
 ```bash
-./getBamDepth --bed example/example-targets.bed --depth example/sample.depth
+getBamDepth --bed example/example-targets.bed --depth example/sample.depth
 ```
 
 CRAM file input:
+
 ```bash
-./getBamDepth --bed example/example-targets.bed --bam example/sample.cram
+getBamDepth --bed example/example-targets.bed --bam example/sample.cram
 ```
 
 BAM file with custom thresholds:
+
 ```bash
-./getBamDepth --bed example/example-targets.bed --bam example/sample.bam --thresholds 5,10 --threads 4
+getBamDepth --bed example/example-targets.bed --bam example/sample.bam --thresholds 5,10 --threads 4
 ```
 
-Use 2 threads for lower resource usage:
+Use 2 threads for lower resource usage (with BAM/CRAM input):
+
 ```bash
-./getBamDepth --bed example/example-targets.bed --depth example/sample.depth --threads 2
+getBamDepth --bed example/example-targets.bed --bam example/sample.bam --threads 2
 ```
 
 Write output to a file instead of stdout:
+
 ```bash
-./getBamDepth --bed example/example-targets.bed --depth example/sample.depth --output results.txt
+getBamDepth --bed example/example-targets.bed --depth example/sample.depth --output results.txt
 ```
 
 ## Inputs
@@ -117,21 +142,42 @@ Write output to a file instead of stdout:
     samtools depth -a -b targets.bed sample.bam > sample.depth
     ```
 - `--thresholds THRESHOLDS`: Comma-separated list of depth thresholds (default: `10,50`). Example: `--thresholds 5,10,20`
-- `--threads INT`: Number of threads passed to `samtools depth`. If not provided, the default is detected CPU count minus two, with a minimum of one. Example: `--threads 8`
+- `--threads INT`: Number of threads passed to `samtools depth` (only used with `--bam` input). If not provided, defaults to: detected CPU count minus 2 (minimum 1). If CPU detection fails, defaults to 1. Example: `--threads 8`
 - `--output FILE`: Write output to a file instead of stdout. If not provided, output is printed to stdout. Example: `--output results.txt`
 
 Runtime behavior:
 - Tab-delimited results are written to stdout or to `--output FILE`
-- Status and progress messages are written to stderr during long-running depth calculations
-- Log messages include timestamps and severity
+- Status, progress, and error messages are written to the terminal (or `/dev/tty` when available)
+- All log messages include timestamps and severity levels (INFO, WARN, ERROR)
+
+## Validation and Error Handling
+
+The script validates all input files and parameters:
+
+**BED file validation:**
+- At least 3 columns required (chr, start, end)
+- Start and end coordinates must be non-negative integers
+- End coordinate must be >= start coordinate
+- Empty regions (start == end) are handled without errors
+
+**Depth file validation:**
+- Exactly 3 columns required (chr, position, depth)
+- Position must be a positive integer
+- Depth must be a non-negative integer
+
+**Threshold validation:**
+- All thresholds must be positive numbers (integers or floats)
+- Thresholds are automatically sorted in ascending order
+- Invalid thresholds are rejected with clear error messages
 
 ## Output
 
 The script outputs a tab-delimited table to standard output. Example: `example/sample.coverage.out.txt`
-  | ID     | chrom | start  | end    | total_bases | region | avg_depth | 10x | 50x | 10x(%) | 50x(%) |
-  |--------|-------|--------|--------|-------------|--------|-----------|-----|-----|--------|--------|
-  | sample | chr1  | 631033 | 636027 | 4995        | Gene1  | 187.22    | 928 | 473 | 18.58  | 9.47   |
-  | sample | chrM  | 5923   | 6115   | 193         | Gene2  | 614.41    | 193 | 148 | 100.00 | 76.68  |
+
+| ID     | chrom | start  | end    | total_bases | region | avg_depth | 10x | 50x | 10x(%) | 50x(%) |
+|--------|-------|--------|--------|-------------|--------|-----------|-----|-----|--------|--------|
+| sample | chr1  | 631033 | 636027 | 4995        | Gene1  | 61.40     | 928 | 473 | 18.58  | 9.47   |
+| sample | chrM  | 5923   | 6115   | 193         | Gene2  | 614.41    | 193 | 148 | 100.00 | 76.68  |
 
 The columns of the table are:
 
