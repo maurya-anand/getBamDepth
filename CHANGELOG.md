@@ -2,20 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.1.0] - 2026-03-05
+## [1.1.0] - 2026-04-05
 
 ### Added
 
-- Parallelization support via `--threads` flag (default: 4) to process BED regions concurrently using `Parallel::ForkManager`.
+- Parallelization support via `--threads` to process BED regions concurrently using `Parallel::ForkManager`.
 - Optional `--output FILE` flag to write results to a file instead of stdout.
-- `make install` target to automate installation of Perl dependencies and conda environment (getbamdepth) with `samtools`, and `perl-parallel-forkmanager`.
-- `make tests` target with test coverage for depth file, BAM, and CRAM inputs.
+- `make install` target to create the `getbamdepth` Conda environment with `samtools`, `perl-parallel-forkmanager`, and `perl-sys-cpu`.
+- `make tests` target with coverage for depth file, BAM, and CRAM inputs.
 
 ### Changed
 
-- `get_depth()` now accepts in-memory hash reference instead of reading from file on each call.
-- Depth file pre-loaded once into memory in parent process before forking (eliminates repeated disk I/O).
-- Makefile now detects and prefers mamba over conda automatically.
+- `get_depth()` now accepts an in-memory hash reference instead of reading from file on each call.
+- Depth data is loaded once into memory in the parent process before forking.
+- Makefile now detects and prefers `mamba` over `conda` automatically.
+- Test targets now write outputs via `getBamDepth --output` instead of shell redirection.
+- Installation now uses Conda/Mamba-managed Perl dependencies only.
+- Default thread selection now uses detected CPU count minus two, with a minimum of one thread.
+- The configured thread count is now passed to `samtools depth`.
 
 ## [1.0.0] - 2023-07-04
 
