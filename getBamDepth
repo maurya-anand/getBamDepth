@@ -6,16 +6,31 @@ use Getopt::Long;
 use File::Basename;
 use Sys::CPU;
 
-my $has_parallel;
-eval {
-    require Parallel::ForkManager;
-    $has_parallel = 1;
-};
-$has_parallel //= 0;
-
 my ($input_bed, $input_bam, $input_depth, $thresholds_str, $output_file);
 my $threads;
 my $num_args = scalar @ARGV;
+my $usage = <<"USAGE";
+Usage: $0 --bed BED_FILE [--bam BAM_FILE | --depth DEPTH_FILE] [--thresholds THRESHOLDS] [--threads INT] [--output FILE]
+
+Parameters:
+  --bed BED_FILE
+      Required BED file with 0-based intervals.
+      Expected columns: chrom, start, end, region_name.
+  --bam BAM_FILE
+      BAM/CRAM/SAM input. The script runs samtools depth -a -b BED_FILE.
+  --depth DEPTH_FILE
+      Precomputed depth file input. The script streams this file directly.
+      Expected format: chrom, 1-based position, depth.
+      The file should be position-sorted and should ideally be generated with:
+      samtools depth -a -b BED_FILE BAM_FILE
+  --thresholds THRESHOLDS
+      Comma-separated depth thresholds. Default: 10,50
+  --threads INT
+      Threads passed to samtools depth for --bam input only.
+      Default: detected CPU count minus 2, minimum 1.
+  --output FILE
+      Write tab-delimited output to a file instead of stdout.
+USAGE
 
 GetOptions(
     'bed=s'        => \$input_bed,
@@ -24,10 +39,10 @@ GetOptions(
     'thresholds=s' => \$thresholds_str,
     'threads=i'    => \$threads,
     'output=s'     => \$output_file,
-) or die "Usage: $0 --bed BED_FILE [--bam BAM_FILE | --depth DEPTH_FILE] [--thresholds THRESHOLDS] [--threads INT] [--output FILE]\n";
+) or die $usage;
 
 if ($num_args == 0) {
-    print "Usage: $0 --bed BED_FILE [--bam BAM_FILE | --depth DEPTH_FILE] [--thresholds THRESHOLDS] [--threads INT] [--output FILE]\n";
+    print $usage;
     exit;
 }
 
@@ -47,85 +62,132 @@ my @thresholds = $thresholds_str ? split /,/, $thresholds_str : (10, 50);
 
 my $sample;
 if ($input_bam) {
-    my $out_dirname = dirname($input_bam);
     $sample = fileparse($input_bam, qr/\.[^.]*/);
-    $input_depth = "$out_dirname/$sample.depth.txt";
-    `samtools depth -@ $threads -b $input_bed $input_bam > $input_depth`;
 } elsif ($input_depth) {
     $sample = fileparse($input_depth, qr/\.[^.]*/);
 }
-
-my %depth_data;
-open(my $dfh, '<', $input_depth) or die "Can't open $input_depth: $!";
-while (my $line = <$dfh>) {
-    chomp $line;
-    my ($chr, $pos, $d) = split(/\t/, $line);
-    $depth_data{$chr}{$pos} = $d;
-}
-close $dfh;
 
 my @count_headers = map { $_ . "x" } @thresholds;
 my @percentage_headers = map { $_ . "x(%)" } @thresholds;
 my @header = ("ID", "chrom", "start", "end", "total_bases", "region", "avg_depth", @count_headers, @percentage_headers);
 
 my @regions;
-open(BED, $input_bed) or die "Can't read the bed file: $input_bed";
-while (my $rec = <BED>) {
+my %regions_by_chr;
+open(my $bed_fh, '<', $input_bed) or die "Can't read the bed file: $input_bed";
+while (my $rec = <$bed_fh>) {
     chomp $rec;
+    next if $rec =~ /^\s*$/;
     my ($chr, $start, $end, $info, $temp, $strand) = split(/\t/, $rec);
     my $total_bases = $end - $start;
     $start += 1;
-    push @regions, [$chr, $start, $end, $total_bases, $info // "unknown"];
+    my $region = {
+        chr => $chr,
+        start => $start,
+        end => $end,
+        total_bases => $total_bases,
+        info => $info // "unknown",
+        sum => 0,
+        counters => [(0) x scalar @thresholds],
+    };
+    push @regions, $region;
+    push @{ $regions_by_chr{$chr} }, $#regions;
 }
-close BED;
+close $bed_fh;
 
-my %results;
-my $pm = Parallel::ForkManager->new($threads);
-$pm->run_on_finish(sub {
-    my ($pid, $exit_code, $ident, $exit_signal, $core_dump, $data_ref) = @_;
-    $results{$ident} = $data_ref;
-});
-
-for my $i (0 .. $#regions) {
-    my ($chr, $start, $end, $total_bases, $info) = @{ $regions[$i] };
-    $pm->start($i) and next;
-    my ($avg_depth, @counters, @percentages) = get_depth($chr, $start, $end, $total_bases, \%depth_data, @thresholds);
-    $pm->finish(0, ["$sample", $chr, $start, $end, $total_bases, $info, $avg_depth, @counters, @percentages]);
+for my $chr (keys %regions_by_chr) {
+    @{ $regions_by_chr{$chr} } = sort {
+        $regions[$a]{start} <=> $regions[$b]{start}
+            ||
+        $regions[$a]{end} <=> $regions[$b]{end}
+    } @{ $regions_by_chr{$chr} };
 }
-$pm->wait_all_children;
+
+my $depth_fh = open_depth_fh($input_bam, $input_bed, $input_depth, $threads);
+process_depth_stream($depth_fh, \@regions, \%regions_by_chr, \@thresholds);
+close $depth_fh or die "Failed to read depth input\n";
 
 if ($output_file) {
     open(OUT, ">$output_file") or die "Can't open $output_file: $!";
     print OUT join("\t", @header) . "\n";
-    for my $i (0 .. $#regions) {
-        print OUT join("\t", @{ $results{$i} }) . "\n";
+    for my $region (@regions) {
+        print OUT join("\t", format_region_output($sample, $region)) . "\n";
     }
     close(OUT);
 } else {
     print join("\t", @header) . "\n";
-    for my $i (0 .. $#regions) {
-        print join("\t", @{ $results{$i} }) . "\n";
+    for my $region (@regions) {
+        print join("\t", format_region_output($sample, $region)) . "\n";
     }
 }
 
-sub get_depth {
-    my ($chr, $start, $end, $total_bases, $depth_ref, @thresholds) = @_;
-    my ($sum, $count) = (0, 0);
-    my @counters = (0) x scalar @thresholds;
-    for my $pos ($start .. $end) {
-        next unless exists $depth_ref->{$chr}{$pos};
-        my $depth_val = $depth_ref->{$chr}{$pos};
-        $sum += $depth_val;
-        $count++;
-        for my $i (0..$#thresholds) {
-            if ($depth_val >= $thresholds[$i]) {
-                $counters[$i]++;
+sub open_depth_fh {
+    my ($bam, $bed, $depth, $thread_count) = @_;
+
+    if ($bam) {
+        open(my $fh, '-|', 'samtools', 'depth', '-a', '-@', $thread_count, '-b', $bed, $bam)
+            or die "Failed to run samtools depth\n";
+        return $fh;
+    }
+
+    open(my $fh, '<', $depth) or die "Can't open $depth: $!";
+    return $fh;
+}
+
+sub process_depth_stream {
+    my ($depth_fh, $regions_ref, $regions_by_chr_ref, $thresholds_ref) = @_;
+    my %next_region_idx;
+    my %active_regions;
+
+    while (my $line = <$depth_fh>) {
+        chomp $line;
+        next if $line =~ /^\s*$/;
+        my ($chr, $pos, $depth) = split(/\t/, $line);
+        next unless exists $regions_by_chr_ref->{$chr};
+
+        my $region_indexes = $regions_by_chr_ref->{$chr};
+        my $next_idx = $next_region_idx{$chr} // 0;
+
+        while ($next_idx < @$region_indexes && $regions_ref->[ $region_indexes->[$next_idx] ]{start} <= $pos) {
+            push @{ $active_regions{$chr} }, $region_indexes->[$next_idx];
+            $next_idx++;
+        }
+        $next_region_idx{$chr} = $next_idx;
+
+        next unless exists $active_regions{$chr};
+
+        my @still_active;
+        for my $region_idx (@{ $active_regions{$chr} }) {
+            my $region = $regions_ref->[$region_idx];
+            next if $region->{end} < $pos;
+            push @still_active, $region_idx;
+            next if $region->{start} > $pos;
+
+            $region->{sum} += $depth;
+            for my $i (0 .. $#$thresholds_ref) {
+                if ($depth >= $thresholds_ref->[$i]) {
+                    $region->{counters}[$i]++;
+                }
             }
         }
+        $active_regions{$chr} = \@still_active;
     }
-    my $avg_depth = $count > 0 ? sprintf("%.2f", $sum / $count) : "0";
-    my @percentages = map { sprintf("%.2f", ($_ / $total_bases) * 100) } @counters;
-    return ($avg_depth, @counters, @percentages);
+}
+
+sub format_region_output {
+    my ($sample_name, $region) = @_;
+    my $avg_depth = $region->{total_bases} > 0 ? sprintf("%.2f", $region->{sum} / $region->{total_bases}) : "0";
+    my @percentages = map { sprintf("%.2f", ($_ / $region->{total_bases}) * 100) } @{ $region->{counters} };
+    return (
+        $sample_name,
+        $region->{chr},
+        $region->{start},
+        $region->{end},
+        $region->{total_bases},
+        $region->{info},
+        $avg_depth,
+        @{ $region->{counters} },
+        @percentages,
+    );
 }
 
 sub detect_cpu_count {
