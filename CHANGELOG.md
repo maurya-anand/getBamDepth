@@ -6,16 +6,18 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
- - Reworked coverage calculation to stream depth data instead of loading the full depth file into memory.
- - Removed Perl-side region parallelization and `Parallel::ForkManager` usage.
- - `--threads` now controls only the thread count passed to `samtools depth` for `--bam` input.
- - Default thread count now uses detected CPU count minus two, with a minimum of one thread.
- - `samtools depth` now runs with `-a` and uses the user-provided BED file directly via `-b`.
- - `avg_depth` is now calculated across all bases in each BED interval, including zero-depth positions.
- - `--depth` input is now streamed directly and is expected to be a position-sorted tab-delimited file with columns: `chrom`, `position`, `depth`.
- - BED input expectations are now documented explicitly: 0-based, end-exclusive, tab-delimited, with column 4 used as the region name when present.
- - Test targets now write outputs via `getBamDepth --output` instead of shell redirection.
- - Installation now uses Conda/Mamba-managed dependencies only.
+- Reworked coverage calculation to stream depth data instead of loading the full depth file into memory.
+- Removed Perl-side region parallelization and `Parallel::ForkManager` usage.
+- `--threads` now controls only the thread count passed to `samtools depth` for `--bam` input.
+- Default thread count now uses detected CPU count minus two, with a minimum of one thread.
+- `samtools depth` now runs with `-a` and uses the user-provided BED file directly via `-b`.
+- `avg_depth` is now calculated across all bases in each BED interval, including zero-depth positions.
+- `--depth` input is now streamed directly and is expected to be a position-sorted tab-delimited file with columns: `chrom`, `position`, `depth`.
+- BED input expectations are now documented explicitly: 0-based, end-exclusive, tab-delimited, with column 4 used as the region name when present.
+- Runtime logging now reports effective parameters, BED/depth input loading, active BED intervals, and final output location via plain stderr messages.
+- Input-source logging now distinguishes precomputed depth input from BAM/CRAM depth generation via `samtools depth`.
+- Test targets now write outputs via `getBamDepth --output` instead of shell redirection.
+- Installation now uses Conda/Mamba-managed dependencies only.
 
 ### Fixed
 
@@ -25,6 +27,7 @@ All notable changes to this project will be documented in this file.
 ### Removed
 
 - `Parallel::ForkManager` dependency from the runtime and Conda environment setup.
+- `Log::Log4perl` dependency from the runtime and Conda environment setup.
 
 ### Notes
 

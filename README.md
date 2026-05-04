@@ -120,6 +120,11 @@ Write output to a file instead of stdout:
 - `--threads INT`: Number of threads passed to `samtools depth`. If not provided, the default is detected CPU count minus two, with a minimum of one. Example: `--threads 8`
 - `--output FILE`: Write output to a file instead of stdout. If not provided, output is printed to stdout. Example: `--output results.txt`
 
+Runtime behavior:
+- Tab-delimited results are written to stdout or to `--output FILE`
+- Status and progress messages are written to stderr during long-running depth calculations
+- Log messages include timestamps and severity
+
 ## Output
 
 The script outputs a tab-delimited table to standard output. Example: `example/sample.coverage.out.txt`
