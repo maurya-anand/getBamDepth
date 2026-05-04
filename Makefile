@@ -1,6 +1,7 @@
 # Detect conda/mamba: prefer mamba, fall back to conda
 CONDA := $(shell command -v mamba >/dev/null 2>&1 && echo mamba || (command -v conda >/dev/null 2>&1 && echo conda || echo ""))
 ENV_NAME := getbamdepth
+RUN_FLAGS := $(if $(filter mamba,$(CONDA)),-a "",--no-capture-output)
 
 install:
 	@if [ -z "$(CONDA)" ]; then \
@@ -47,15 +48,15 @@ tests:
 	@echo "Running test suite..."
 	@echo ""
 	@echo "Test 1: Depth file input with default thresholds..."
-	@$(CONDA) run -n $(ENV_NAME) ./getBamDepth --bed example/example-targets.bed --depth example/sample.depth | sed -e '${/^$/d}' > /tmp/test1.txt
+	@$(CONDA) run $(RUN_FLAGS) -n $(ENV_NAME) ./getBamDepth --bed example/example-targets.bed --depth example/sample.depth --output /tmp/test1.txt
 	@diff /tmp/test1.txt example/sample.coverage.out.txt && echo "[PASS] Test 1 passed" || (echo "[FAIL] Test 1 failed"; exit 1)
 	@echo ""
 	@echo "Test 2: CRAM input with default thresholds..."
-	@$(CONDA) run -n $(ENV_NAME) ./getBamDepth --bed example/example-targets.bed --bam example/sample.cram | sed -e '${/^$/d}' > /tmp/test2.txt
+	@$(CONDA) run $(RUN_FLAGS) -n $(ENV_NAME) ./getBamDepth --bed example/example-targets.bed --bam example/sample.cram --output /tmp/test2.txt
 	@diff /tmp/test2.txt example/sample.coverage.out.txt && echo "[PASS] Test 2 passed" || (echo "[FAIL] Test 2 failed"; exit 1)
 	@echo ""
 	@echo "Test 3: BAM input with custom thresholds (5x,10x)..."
-	@$(CONDA) run -n $(ENV_NAME) ./getBamDepth --bed example/example-targets.bed --bam example/sample.bam --thresholds 5,10 | sed -e '${/^$/d}' > /tmp/test3.txt
+	@$(CONDA) run $(RUN_FLAGS) -n $(ENV_NAME) ./getBamDepth --bed example/example-targets.bed --bam example/sample.bam --thresholds 5,10 --output /tmp/test3.txt
 	@if grep -q "5x" /tmp/test3.txt && grep -q "10x" /tmp/test3.txt; then echo "[PASS] Test 3 passed"; else echo "[FAIL] Test 3 failed"; exit 1; fi
 	@echo ""
 	@echo "All tests passed!"
