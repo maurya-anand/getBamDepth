@@ -10,6 +10,11 @@ use Sys::CPU;
 my ($input_bed, $input_bam, $input_depth, $thresholds_str, $output_file);
 my $threads;
 my $num_args = scalar @ARGV;
+
+select STDERR;
+$| = 1;
+select STDOUT;
+$| = 1;
 my $usage = <<"USAGE";
 Usage: $0 --bed BED_FILE [--bam BAM_FILE | --depth DEPTH_FILE] [--thresholds THRESHOLDS] [--threads INT] [--output FILE]
 
