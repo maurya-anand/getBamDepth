@@ -20,6 +20,7 @@ All notable changes to this project will be documented in this file.
 - Installation now uses Conda/Mamba-managed Perl dependencies only.
 - Default thread selection now uses detected CPU count minus two, with a minimum of one thread.
 - The configured thread count is now passed to `samtools depth`.
+- `samtools depth` now uses the user BED file directly to reduce the calculation time.
 
 ## [1.0.0] - 2023-07-04
 
