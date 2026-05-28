@@ -22,6 +22,7 @@ make install
 ```
 
 This installs:
+
 - Conda environment (`bd-env`) with `samtools` and `perl`
 
 Then activate the environment:
@@ -41,6 +42,7 @@ make uninstall
 ```
 
 Or manually:
+
 ```bash
 conda env remove -n bd-env
 ```
@@ -50,6 +52,7 @@ conda env remove -n bd-env
 If you prefer not to use conda/mamba, install the required dependencies yourself:
 
 **Required:**
+
 - **Perl 5.10+** — includes all necessary modules: strict, warnings, Getopt::Long, File::Basename, POSIX
 - **samtools** — for BAM/CRAM/SAM processing (optional if using `--depth` only)
 
@@ -72,65 +75,69 @@ make test
 
 ## Example Usage
 
-**Option 1: Activate the environment first**
+### Activate the environment
 
-```bash
-conda activate bd-env
-getBamDepth --bed BED_FILE [--bam BAM_FILE | --depth DEPTH_FILE] [--thresholds THRESHOLDS] [--threads INT] [--output FILE]
-```
+- Option 1:
 
-**Option 2: Run directly without activating**
+  ```bash
+  conda activate bd-env
+  getBamDepth --bed BED_FILE [--bam BAM_FILE | --depth DEPTH_FILE] [--thresholds THRESHOLDS] [--threads INT] [--output FILE]
+  ```
 
-```bash
-mamba run -n bd-env getBamDepth --bed BED_FILE [--bam BAM_FILE | --depth DEPTH_FILE] [--thresholds THRESHOLDS] [--threads INT] [--output FILE]
-```
+- Option 2
 
-### Examples
+  ```bash
+  mamba run -n bd-env getBamDepth --bed BED_FILE [--bam BAM_FILE | --depth DEPTH_FILE] [--thresholds THRESHOLDS] [--threads INT] [--output FILE]
+  ```
 
-Depth file input with default thresholds:
+### Execution
 
-```bash
-getBamDepth --bed example/example-targets.bed --depth example/sample.depth
-```
+- Depth file input with default thresholds:
 
-CRAM file input:
+  ```bash
+  getBamDepth --bed example/example-targets.bed --depth example/sample.depth
+  ```
 
-```bash
-getBamDepth --bed example/example-targets.bed --bam example/sample.cram
-```
+- CRAM file input:
 
-BAM file with custom thresholds:
+  ```bash
+  getBamDepth --bed example/example-targets.bed --bam example/sample.cram
+  ```
 
-```bash
-getBamDepth --bed example/example-targets.bed --bam example/sample.bam --thresholds 5,10 --threads 4
-```
+- BAM file with custom thresholds:
 
-Use 2 threads for lower resource usage (with BAM/CRAM input):
+  ```bash
+  getBamDepth --bed example/example-targets.bed --bam example/sample.bam --thresholds 5,10 --threads 4
+  ```
 
-```bash
-getBamDepth --bed example/example-targets.bed --bam example/sample.bam --threads 2
-```
+- Use 2 threads for lower resource usage (with BAM/CRAM input):
 
-Write output to a file instead of stdout:
+  ```bash
+  getBamDepth --bed example/example-targets.bed --bam example/sample.bam --threads 2
+  ```
 
-```bash
-getBamDepth --bed example/example-targets.bed --depth example/sample.depth --output results.txt
-```
+- Write output to a file instead of stdout:
+
+  ```bash
+  getBamDepth --bed example/example-targets.bed --depth example/sample.depth --output results.txt
+  ```
 
 ## Inputs
 
-- `--bed BED_FILE` (required): Path to the BED file (0-based coordinates). Example: `example/example-targets.bed`
-  |      |       |       |      |   |   |
-  |------|-------|-------|------|---|---|
-  | chr1 | 631032| 636027| Gene1| . | + |
-  | chrM | 5922  | 6115  | Gene2| . | + |
-  Expected format:
+- `--bed BED_FILE` (required): Path to the BED file (0-based coordinates).
+
   - Tab-delimited BED file
   - 0-based start, end-exclusive end
   - At least 3 columns: `chrom`, `start`, `end`
   - Column 4 is used as the region name when present
-  - The file should be sorted by chromosome and start position for best results
   
+    Example: `example/example-targets.bed`
+
+    |      |       |       |      |   |   |
+    |------|-------|-------|------|---|---|
+    | chr1 | 631032| 636027| Gene1| . | + |
+    | chrM | 5922  | 6115  | Gene2| . | + |
+
 - `--bam BAM_FILE`: Path to BAM, SAM, or CRAM file. Must be indexed (use `samtools index`). Either this or `--depth` is required.
 - `--depth DEPTH_FILE`: Path to a pre-calculated depth file. Either this or `--bam` is required.
   Expected format:
@@ -138,44 +145,14 @@ getBamDepth --bed example/example-targets.bed --depth example/sample.depth --out
   - `position` must be 1-based
   - The file should be sorted by chromosome and position
   - For best accuracy, generate it from the same BED file with:
+
     ```bash
     samtools depth -a -b targets.bed sample.bam > sample.depth
     ```
+
 - `--thresholds THRESHOLDS`: Comma-separated list of depth thresholds (default: `10,50`). Example: `--thresholds 5,10,20`
 - `--threads INT`: Number of threads passed to `samtools depth` (only used with `--bam` input). If not provided, defaults to: detected CPU count minus 2 (minimum 1). If CPU detection fails, defaults to 1. Example: `--threads 8`
 - `--output FILE`: Write output to a file instead of stdout. If not provided, output is printed to stdout. Example: `--output results.txt`
-
-Runtime behavior:
-- Tab-delimited results are written to stdout or to `--output FILE`
-- Status, progress, and error messages are written to the terminal (or `/dev/tty` when available)
-- All log messages include timestamps and severity levels (INFO, WARN, ERROR)
-
-## Validation and Error Handling
-
-The script validates all input files and parameters:
-
-**BED file validation:**
-- At least 3 columns required (chr, start, end)
-- Start and end coordinates must be non-negative integers
-- End coordinate must be >= start coordinate
-- Empty regions (start == end) are handled without errors
-
-**Depth file validation:**
-- Exactly 3 columns required (chr, position, depth)
-- Position must be a positive integer
-- Depth must be a non-negative integer
-
-**BAM/CRAM file validation:**
-- BAM/CRAM files must be **indexed** before use
-- Supported index formats: `.bai` (BAM), `.csi` (BAM), `.crai` (CRAM)
-- Create an index with: `samtools index sample.bam` or `samtools index sample.cram`
-- Missing index will cause an error: `BAM index not found (run: samtools index ...)`
-- Without an index, samtools would perform a slow linear scan of the entire file instead of seeking to target regions
-
-**Threshold validation:**
-- All thresholds must be positive numbers (integers or floats)
-- Thresholds are automatically sorted in ascending order
-- Invalid thresholds are rejected with clear error messages
 
 ## Output
 
@@ -197,6 +174,43 @@ The columns of the table are:
 - `avg_depth`: This is the average depth of coverage for the region. It gives you an idea of how many times each base in the region was sequenced on average. A higher average depth means that the region was sequenced more times, which generally leads to more reliable results.
 - `10x`, `50x`, ..., `100x`: These columns represent the count of bases in the region that have been sequenced at least a certain number of times. For instance, the `10x` column indicates the number of bases that have been sequenced at least 10 times.
 - `10x(%)`, `50x(%)`, ..., `100x(%)`: These columns represent the percentage of bases in the region that have been sequenced at least a certain number of times. For example, the `10x(%)` column shows the percentage of bases that have been sequenced at least 10 times.
+
+## Validation and Error Handling
+
+The script validates all input files and parameters:
+
+**BED file validation:**
+
+- At least 3 columns required (chr, start, end)
+- Start and end coordinates must be non-negative integers
+- End coordinate must be >= start coordinate
+- Empty regions (start == end) are handled without errors
+
+**Depth file validation:**
+
+- Exactly 3 columns required (chr, position, depth)
+- Position must be a positive integer
+- Depth must be a non-negative integer
+
+**BAM/CRAM file validation:**
+
+- BAM/CRAM files must be **indexed** before use
+- Supported index formats: `.bai` (BAM), `.csi` (BAM), `.crai` (CRAM)
+- Create an index with: `samtools index sample.bam` or `samtools index sample.cram`
+- Missing index will cause an error: `BAM index not found (run: samtools index ...)`
+- Without an index, samtools would perform a slow linear scan of the entire file instead of seeking to target regions
+
+**Threshold validation:**
+
+- All thresholds must be positive numbers (integers or floats)
+- Thresholds are automatically sorted in ascending order
+- Invalid thresholds are rejected with clear error messages
+
+**Runtime behavior:**
+
+- Tab-delimited results are written to stdout or to `--output FILE`
+- Status, progress, and error messages are written to the terminal (or `/dev/tty` when available)
+- All log messages include timestamps and severity levels (INFO, WARN, ERROR)
 
 ## Reference
 
