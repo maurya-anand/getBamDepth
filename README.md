@@ -13,84 +13,39 @@ Supports configurable threading for `samtools depth` to improve performance on l
 - mamba or conda (for managing dependencies and samtools)
 - samtools (installed in conda environment, required for --bam option)
 
-## Installation
+> [!NOTE]
+> If you only use the `--depth` option with pre-calculated depth files, samtools is not required.
 
-### Quick Start
+## Quick Start
+
+### 1. Install
 
 ```bash
 make install
 ```
 
-This installs:
+This installs a conda environment (`bd-env`) with `samtools` and `perl`.
 
-- Conda environment (`bd-env`) with `samtools` and `perl`
-
-Then activate the environment:
+### 2. Activate environment
 
 ```bash
 conda activate bd-env
 ```
 
-Now you can call `getBamDepth` directly from anywhere (when the environment is active):
-
-### Uninstall
-
-To remove the conda environment:
+### 3. Run a first command
 
 ```bash
-make uninstall
-```
-
-Or manually:
-
-```bash
-conda env remove -n bd-env
-```
-
-### Manual Installation
-
-If you prefer not to use conda/mamba, install the required dependencies yourself:
-
-**Required:**
-
-- **Perl 5.10+** — includes all necessary modules: strict, warnings, Getopt::Long, File::Basename, POSIX
-- **samtools** — for BAM/CRAM/SAM processing (optional if using `--depth` only)
-
-Then run the script directly from the project directory:
-
-```bash
-./getBamDepth --bed BED_FILE [--bam BAM_FILE | --depth DEPTH_FILE]
-```
-
-> [!NOTE]
-> If you only use the `--depth` option with pre-calculated depth files, samtools is not required.
-
-## Testing
-
-Run the test suite to verify the installation:
-
-```bash
-make test
+getBamDepth --bed example/example-targets.bed --depth example/sample.depth
 ```
 
 ## Example Usage
 
-### Activate the environment
-
-- Option 1:
-
-  ```bash
-  conda activate bd-env
-  getBamDepth --bed BED_FILE [--bam BAM_FILE | --depth DEPTH_FILE] [--thresholds THRESHOLDS] [--threads INT] [--output FILE]
-  ```
-
-- Option 2
-
-  ```bash
-  mamba run -n bd-env getBamDepth --bed BED_FILE [--bam BAM_FILE | --depth DEPTH_FILE] [--thresholds THRESHOLDS] [--threads INT] [--output FILE]
-  ```
-
-### Execution
+>[!NOTE]
+> Make sure to activate the environment.
+>
+> ```bash
+> conda activate bd-env
+> ```
 
 - Depth file input with default thresholds:
 
@@ -130,7 +85,7 @@ make test
   - 0-based start, end-exclusive end
   - At least 3 columns: `chrom`, `start`, `end`
   - Column 4 is used as the region name when present
-  
+
     Example: `example/example-targets.bed`
 
     |      |       |       |      |   |   |
@@ -139,6 +94,7 @@ make test
     | chrM | 5922  | 6115  | Gene2| . | + |
 
 - `--bam BAM_FILE`: Path to BAM, SAM, or CRAM file. Must be indexed (use `samtools index`). Either this or `--depth` is required.
+
 - `--depth DEPTH_FILE`: Path to a pre-calculated depth file. Either this or `--bam` is required.
   Expected format:
   - Tab-delimited with 3 columns: `chrom`, `position`, `depth`
@@ -151,7 +107,9 @@ make test
     ```
 
 - `--thresholds THRESHOLDS`: Comma-separated list of depth thresholds (default: `10,50`). Example: `--thresholds 5,10,20`
+
 - `--threads INT`: Number of threads passed to `samtools depth` (only used with `--bam` input). If not provided, defaults to: detected CPU count minus 2 (minimum 1). If CPU detection fails, defaults to 1. Example: `--threads 8`
+
 - `--output FILE`: Write output to a file instead of stdout. If not provided, output is printed to stdout. Example: `--output results.txt`
 
 ## Output
@@ -211,6 +169,43 @@ The script validates all input files and parameters:
 - Tab-delimited results are written to stdout or to `--output FILE`
 - Status, progress, and error messages are written to the terminal (or `/dev/tty` when available)
 - All log messages include timestamps and severity levels (INFO, WARN, ERROR)
+
+## Manual Installation
+
+If you prefer not to use conda/mamba, install the required dependencies yourself:
+
+**Required:**
+
+- **Perl 5.10+** — includes all necessary modules: strict, warnings, Getopt::Long, File::Basename, POSIX
+- **samtools** — for BAM/CRAM/SAM processing (optional if using `--depth` only)
+
+Then run the script directly from the project directory:
+
+```bash
+./getBamDepth --bed BED_FILE [--bam BAM_FILE | --depth DEPTH_FILE]
+```
+
+## Uninstall
+
+To remove the conda environment:
+
+```bash
+make uninstall
+```
+
+Or manually:
+
+```bash
+conda env remove -n bd-env
+```
+
+## Testing
+
+Run the test suite to verify the installation:
+
+```bash
+make test
+```
 
 ## Reference
 
