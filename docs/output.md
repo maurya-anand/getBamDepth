@@ -1,6 +1,6 @@
 # Output
 
-The tool prints a tab-delimited table. By default it goes to the screen. With `--output` it goes to a file.
+The tool prints a tab-delimited table. By default it prints on the terminal (`stdout`). Use `--output` to write the output to a file.
 
 Here is the example output from `example/sample.coverage.out.txt`:
 

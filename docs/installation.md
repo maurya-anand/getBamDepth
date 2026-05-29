@@ -33,7 +33,7 @@ You need:
 
 Then run the script straight from the project directory:
 
-```bash
+```text
 ./getBamDepth --bed BED_FILE [--bam BAM_FILE | --depth DEPTH_FILE]
 ```
 

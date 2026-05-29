@@ -6,15 +6,7 @@ Activate the conda environment before you run any command:
 conda activate bd-env
 ```
 
-## Your first command
-
-This reads the example regions and the example depth file, then prints a coverage table:
-
-```bash
-getBamDepth --bed example/example-targets.bed --depth example/sample.depth
-```
-
-## Command shape
+## Command options
 
 ```text
 getBamDepth --bed BED_FILE [--bam BAM_FILE | --depth DEPTH_FILE] [--thresholds THRESHOLDS] [--threads INT] [--output FILE]
@@ -29,31 +21,47 @@ See [Inputs](inputs.md) for the full list of options.
 Depth file input with the default thresholds:
 
 ```bash
-getBamDepth --bed example/example-targets.bed --depth example/sample.depth
+getBamDepth \
+    --bed example/example-targets.bed \
+    --depth example/sample.depth
 ```
 
-CRAM file input:
+CRAM file input with the default thresholds:
 
 ```bash
-getBamDepth --bed example/example-targets.bed --bam example/sample.cram
+getBamDepth \
+    --bed example/example-targets.bed \
+    --bam example/sample.cram
 ```
 
-BAM file with custom thresholds and four threads:
+BAM file with custom thresholds:
 
 ```bash
-getBamDepth --bed example/example-targets.bed --bam example/sample.bam --thresholds 5,10 --threads 4
+getBamDepth \
+    --bed example/example-targets.bed \
+    --bam example/sample.bam \
+    --thresholds 5,10
 ```
 
-Use fewer threads when you want lower resource use:
+BAM file with custom thresholds and threads:
 
 ```bash
-getBamDepth --bed example/example-targets.bed --bam example/sample.bam --threads 2
+getBamDepth \
+    --bed example/example-targets.bed \
+    --bam example/sample.bam \
+    --thresholds 5,10 \
+    --threads 4
 ```
 
-Write the result to a file instead of the screen:
+Write the result to a file instead of printing on the terminal:
 
 ```bash
-getBamDepth --bed example/example-targets.bed --depth example/sample.depth --output results.txt
+getBamDepth \
+    --bed example/example-targets.bed \
+    --depth example/sample.depth \
+    --thresholds 5,10 \
+    --threads 4 \
+    --output results.txt
 ```
 
 ## Where messages go

@@ -13,10 +13,10 @@ The BED file lists the regions you want to measure.
 
 Example, from `example/example-targets.bed`:
 
-| chrom | start  | end    | name  |   |   |
-|-------|--------|--------|-------|---|---|
-| chr1  | 631032 | 636027 | Gene1 | . | + |
-| chrM  | 5922   | 6115   | Gene2 | . | + |
+```tsv
+chr1  631032  636027    Gene1   .   +
+chrM    5922    6115    Gene2   .   +
+```
 
 ## --bam BAM_FILE
 
@@ -28,7 +28,7 @@ The file must be indexed. Make an index with:
 samtools index sample.bam
 ```
 
-The tool runs `samtools depth -a -b BED_FILE` on this file to get the depth at each position.
+The tool automatically runs `samtools depth -a -b BED_FILE` on this file to get the depth at each position.
 
 ## --depth DEPTH_FILE
 
