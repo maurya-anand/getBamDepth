@@ -1,65 +1,76 @@
 # Installation
 
-There are two ways to install getBamDepth. The first uses conda or mamba and sets up everything for you. The second is manual, for people who already have Perl and samtools.
+getBamDepth can be installed with the project `Makefile`. It can also be run directly as a Perl script.
 
-## Install with conda or mamba
+## Makefile install
 
-This is the easy way. It creates a conda environment called `bd-env` with samtools and Perl, then installs the tool into that environment.
+The `make install` target uses `mamba` if it is available. If `mamba` is not available, it uses `conda`.
+
+The target creates a conda environment named `bd-env`. It installs `samtools` and `perl` from `conda-forge` and `bioconda`. It also copies `getBamDepth` into the environment `bin` directory.
 
 ```bash
 make install
 ```
 
-Activate the environment before you run the tool:
+Activate the environment before running the installed command:
 
 ```bash
 conda activate bd-env
 ```
 
-Check that it works:
+Show the help text by running the command with no options:
 
 ```bash
-getBamDepth --help
+getBamDepth
 ```
 
-## Manual installation
+## Manual use
 
-If you do not want to use conda or mamba, install the dependencies yourself.
+Manual use needs Perl. BAM, SAM, and CRAM input also needs samtools.
 
-You need:
+Required Perl modules are part of the Perl core used by this script:
 
-- **Perl 5.10 or later.** It already includes the modules the tool uses: strict, warnings, Getopt::Long, File::Basename, and POSIX.
-- **samtools.** Needed only for BAM, SAM, and CRAM input. You can skip it if you only use `--depth`.
+- `strict`
+- `warnings`
+- `Getopt::Long`
+- `File::Basename`
+- `POSIX`
 
-Then run the script straight from the project directory:
+Run the script from the project directory:
 
-```text
-./getBamDepth --bed BED_FILE [--bam BAM_FILE | --depth DEPTH_FILE]
+```bash
+./getBamDepth --bed BED_FILE --depth DEPTH_FILE
+```
+
+or:
+
+```bash
+./getBamDepth --bed BED_FILE --bam ALIGNMENT_FILE
 ```
 
 ## Uninstall
 
-To remove the conda environment:
+The `make uninstall` target removes the `bd-env` conda environment.
 
 ```bash
 make uninstall
 ```
 
-Or do it by hand:
+The same action can be run directly with conda:
 
 ```bash
-conda env remove -n bd-env
+conda env remove -n bd-env -y
 ```
 
-## Test the install
+## Test targets
 
-Run the included tests to confirm everything is set up:
+The `make test` target runs three smoke tests. It uses the `bd-env` conda environment.
 
 ```bash
 make test
 ```
 
-For a fuller run that also checks the input validation:
+The `make test-full` target runs the smoke tests and the validation test suite.
 
 ```bash
 make test-full

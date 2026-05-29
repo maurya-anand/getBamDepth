@@ -1,37 +1,72 @@
 # Validation and errors
 
-The tool checks your input files and options before it runs. If something is wrong, it stops and prints a clear error message. This page lists the checks.
+getBamDepth validates input files and options before and during processing. If a check fails, the script writes an `ERROR` message and exits with status `1`.
 
-## BED file checks
+## Required options
 
-- The file must have at least three columns: chrom, start, and end.
-- Start and end must be non-negative whole numbers.
-- The end must be greater than or equal to the start.
-- Empty regions, where the start equals the end, are allowed and cause no error.
+- `--bed` is required.
+- One depth source is required.
+- The depth source must be `--bam` or `--depth`.
+- `--bam` and `--depth` cannot be used together.
+
+## File checks
+
+- The BED file must exist.
+- The BAM, SAM, or CRAM file must exist when `--bam` is used.
+- The depth file must exist when `--depth` is used.
+- An index file must exist when `--bam` is used.
+
+Accepted index suffixes:
+
+- `.bai`
+- `.csi`
+- `.crai`
+
+Missing alignment indexes produce this error form:
+
+```text
+BAM index not found (run: samtools index ALIGNMENT_FILE)
+```
+
+The message says `BAM index` for BAM, SAM, and CRAM input.
+
+## BED checks
+
+- Each non-empty BED line must have at least three columns.
+- `start` must be a non-negative integer.
+- `end` must be a non-negative integer.
+- `end` must be greater than or equal to `start`.
+- Empty regions are allowed when `start` equals `end`.
 
 ## Depth file checks
 
-- Each line must have exactly three columns: chrom, position, and depth.
-- The position must be a positive whole number.
-- The depth must be a non-negative whole number.
-
-## BAM and CRAM checks
-
-- The file must be indexed before use.
-- Supported index types are `.bai` and `.csi` for BAM, and `.crai` for CRAM.
-- Make an index with `samtools index sample.bam` or `samtools index sample.cram`.
-- A missing index gives this error: `BAM index not found (run: samtools index ...)`.
-
-The index matters for speed. Without it, samtools has to scan the whole file instead of jumping straight to your regions.
+- Each non-empty depth line must have exactly three columns.
+- Position must be a positive integer.
+- Depth must be a non-negative integer.
 
 ## Threshold checks
 
-- Each threshold must be a positive number. Whole numbers and decimals both work.
-- Thresholds are sorted in ascending order for you.
-- A bad threshold is rejected with a clear message.
+- Each threshold must be a positive number.
+- Zero is rejected.
+- Negative values are rejected.
+- Non-numeric values are rejected.
+- Decimal values are accepted.
+- Thresholds are sorted from low to high.
 
-## Messages and logging
+## Logging
 
-- The result table goes to standard output, or to the file you set with `--output`.
-- Status, progress, and error messages go to the terminal, or to `/dev/tty` when it is available.
-- Every message has a timestamp and a level: INFO, WARN, or ERROR.
+Messages use this format:
+
+```text
+LEVEL YYYY/MM/DD HH:MM:SS > message text
+```
+
+Message levels are:
+
+- `INFO`
+- `WARN`
+- `ERROR`
+
+The result table is written to standard output or to the file set by `--output`.
+
+When standard output is a terminal, status messages are written to `/dev/tty` if it is available. When standard output is redirected and `--output` is not set, status messages may be written to standard output with the result table.

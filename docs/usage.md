@@ -1,24 +1,33 @@
 # Usage
 
-Activate the conda environment before you run any command:
-
-```bash
-conda activate bd-env
-```
-
-## Command options
+## Command form
 
 ```text
-getBamDepth --bed BED_FILE [--bam BAM_FILE | --depth DEPTH_FILE] [--thresholds THRESHOLDS] [--threads INT] [--output FILE]
+getBamDepth --bed BED_FILE [--bam ALIGNMENT_FILE | --depth DEPTH_FILE] [--thresholds THRESHOLDS] [--threads INT] [--output FILE]
 ```
 
-You always need `--bed`. You also need exactly one source of depth, either `--bam` or `--depth`. You cannot pass both.
+`--bed` is required.
 
-See [Inputs](inputs.md) for the full list of options.
+Exactly one depth source is required:
 
-## Common examples
+- `--bam` for BAM, SAM, or CRAM input.
+- `--depth` for a precomputed depth file.
 
-Depth file input with the default thresholds:
+`--bam` and `--depth` cannot be used together.
+
+## Help text
+
+Running `getBamDepth` with no options prints the help text.
+
+```bash
+getBamDepth
+```
+
+Invalid options also print the help text after the unknown option message.
+
+## Examples
+
+Depth file input with default thresholds:
 
 ```bash
 getBamDepth \
@@ -26,7 +35,7 @@ getBamDepth \
     --depth example/sample.depth
 ```
 
-CRAM file input with the default thresholds:
+CRAM input with default thresholds:
 
 ```bash
 getBamDepth \
@@ -34,7 +43,7 @@ getBamDepth \
     --bam example/sample.cram
 ```
 
-BAM file with custom thresholds:
+BAM input with custom thresholds:
 
 ```bash
 getBamDepth \
@@ -43,7 +52,7 @@ getBamDepth \
     --thresholds 5,10
 ```
 
-BAM file with custom thresholds and threads:
+BAM input with custom thresholds and threads:
 
 ```bash
 getBamDepth \
@@ -53,19 +62,26 @@ getBamDepth \
     --threads 4
 ```
 
-Write the result to a file instead of printing on the terminal:
+Write the result table to a file:
 
 ```bash
 getBamDepth \
     --bed example/example-targets.bed \
     --depth example/sample.depth \
     --thresholds 5,10 \
-    --threads 4 \
     --output results.txt
 ```
 
-## Where messages go
+## Messages
 
-The result table goes to standard output, or to the file you set with `--output`.
+The result table goes to standard output unless `--output` is set.
 
-Status, progress, and error messages go to the terminal. Each message has a timestamp and a level: INFO, WARN, or ERROR. These messages stay separate from the result table, so you can redirect the table to a file without mixing the two.
+Status, warning, and error messages have this form:
+
+```text
+INFO  2026/05/29 13:00:00 > message text
+```
+
+When standard output is a terminal, messages are written to `/dev/tty` if it is available. When output is redirected and `--output` is not set, messages may share standard output with the result table.
+
+Use `--output FILE` when a separate result file is needed.

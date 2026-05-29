@@ -3,43 +3,43 @@
 [![publish](https://img.shields.io/github/actions/workflow/status/maurya-anand/getBamDepth/release.yml)](https://github.com/maurya-anand/getBamDepth/releases)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.13356789.svg)](https://doi.org/10.5281/zenodo.13356789)
 
-getBamDepth calculates the average depth of coverage for regions in a BED file.
+getBamDepth calculates depth of coverage for regions in a BED file.
 
-You can give it a BAM, SAM, or CRAM file, and it will run samtools to get the depth. You can also give it a depth file that you already made, and it will read that instead. For each region, it also counts how many bases reach the depth thresholds you choose.
+The depth can come from a BAM, SAM, or CRAM file. In that mode, getBamDepth runs `samtools depth`. The depth can also come from a depth file made earlier.
 
-## What it does
+For each BED region, getBamDepth reports average depth. It also reports how many bases reach each depth threshold.
 
-- Reads a list of regions from a BED file.
-- Gets the depth at each position, either from an alignment file or a depth file.
-- Reports the average depth for each region.
-- Counts and reports the bases that meet your depth thresholds, as both a number and a percentage.
+## Main features
 
-## When to use it
-
-Use getBamDepth when you want a quick coverage summary for a set of target regions. This is common in panel sequencing, exome work, and any case where you need to check how well your regions were covered.
+- Reads target regions from a BED file.
+- Reads depth from an alignment file or from a depth file.
+- Reports one output row for each BED region.
+- Reports average depth for each region.
+- Reports threshold counts and threshold percentages.
+- Supports custom depth thresholds.
 
 ## Requirements
 
 - Perl 5.10 or later.
-- samtools, needed only for the `--bam` option.
-- mamba or conda, if you want the easy install.
+- samtools for BAM, SAM, and CRAM input.
+- mamba or conda for the `make install` target.
 
-If you only use the `--depth` option with a depth file you made earlier, you do not need samtools.
+samtools is not needed when only `--depth` input is used.
 
-## Next steps
+## Documentation pages
 
-- [Installation](installation.md) shows how to set up the tool.
-- [Usage](usage.md) shows how to run your first command.
-- [Inputs](inputs.md) explains each file and option.
-- [Output](output.md) explains the result table.
-- [Validation and errors](validation.md) explains the checks and error messages.
+- [Installation](installation.md)
+- [Usage](usage.md)
+- [Inputs](inputs.md)
+- [Output](output.md)
+- [Validation and errors](validation.md)
 
 ## Citation
 
-If you use this tool, please cite it through its Zenodo record:
+If getBamDepth is used in published work, cite the Zenodo record:
 
 Anand Maurya. (2024). maurya-anand/getBamDepth: v1.0.0 (v1.0.0). Zenodo. [https://doi.org/10.5281/zenodo.13356789](https://doi.org/10.5281/zenodo.13356789)
 
-Please also cite samtools:
+Also cite samtools when BAM, SAM, or CRAM input is used:
 
 Danecek P, Bonfield JK, Liddle J, Marshall J, Ohan V, Pollard MO, Whitwham A, Keane T, McCarthy SA, Davies RM, Li H. Twelve years of SAMtools and BCFtools. GigaScience (2021) 10(2) giab008. [PubMed 33590861](https://pubmed.ncbi.nlm.nih.gov/33590861)
