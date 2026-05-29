@@ -1,18 +1,29 @@
 # Installation
 
-## Requirements
+## Installation methods
 
+1. Recommended: automatic installation with the Makefile.
+2. Alternative (optional): manual install directly from this repository (instead of the recommended Makefile method).
+
+## Which path should I use?
+
+- Use the Makefile path if you want the easiest setup and built-in test/uninstall commands.
+- Use manual install if you only want to run the script directly from a clone.
+
+## Recommended: Automatic install (Makefile)
+
+### Requirements
+
+- `mamba` or `conda`.
 - Perl.
-- samtools for BAM and CRAM input.
-- mamba or conda for `make install`, `make uninstall`, and test targets.
+- `samtools` for BAM or CRAM input.
 
-samtools is not needed when `--depth` input is used.
+If you only use `--depth`, `samtools` is not required at runtime.
 
-## Makefile install
+### Install
 
-`make install` uses `mamba` when available. Otherwise it uses `conda`.
-
-It creates a conda environment named `bd-env` with `samtools` and `perl`. It copies `getBamDepth` into the environment `bin` directory.
+`make install` uses `mamba` when available and falls back to `conda`.
+It creates a conda environment named `bd-env` with `samtools` and `perl`, then installs `getBamDepth` into that environment's `bin` directory.
 
 ```bash
 make install
@@ -24,46 +35,49 @@ Activate the environment:
 conda activate bd-env
 ```
 
-Print the usage text:
+Verify installation:
 
 ```bash
-getBamDepth
+getBamDepth --help
 ```
 
-## Manual use
+## Maintenance for Makefile install
 
-Manual use needs Perl. BAM and CRAM input also needs samtools.
-
-Run from the project directory:
-
-```bash
-./getBamDepth --bed BED_FILE --depth DEPTH_FILE
-```
-
-or:
-
-```bash
-./getBamDepth --bed BED_FILE --bam ALIGNMENT_FILE
-```
-
-## Uninstall
-
-`make uninstall` removes the `bd-env` conda environment.
+Remove the `bd-env` environment:
 
 ```bash
 make uninstall
 ```
 
-## Tests
-
-`make test` runs three smoke tests.
+Run quick smoke tests (3 tests):
 
 ```bash
 make test
 ```
 
-`make test-full` runs the smoke tests and the validation test suite.
+Run smoke tests plus validation tests:
 
 ```bash
 make test-full
+```
+
+## Optional: Manual install
+
+Manual install runs the script from this project directory and does not run `make install`.
+
+### Requirements
+
+- Perl.
+- `samtools` only if you use `--bam` with BAM/CRAM input.
+
+Run with a depth file:
+
+```bash
+./getBamDepth --bed BED_FILE --depth DEPTH_FILE
+```
+
+Run with an alignment file:
+
+```bash
+./getBamDepth --bed BED_FILE --bam ALIGNMENT_FILE
 ```
