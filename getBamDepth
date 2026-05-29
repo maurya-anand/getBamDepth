@@ -6,20 +6,23 @@ use Getopt::Long;
 use File::Basename;
 use POSIX qw(strftime);
 
-my ($input_bed, $input_bam, $input_depth, $thresholds_str, $output_file);
+my ($input_bed, $input_bam, $input_depth, $thresholds_str, $output_file, $help);
 my $threads;
 my $num_args = scalar @ARGV;
 my $log_fh = initialize_log_fh();
 
 my $usage = <<"USAGE";
 Usage: $0 --bed BED_FILE [--bam BAM_FILE | --depth DEPTH_FILE] [--thresholds THRESHOLDS] [--threads INT] [--output FILE]
+       $0 --help
 
 Parameters:
+  --help, -h
+      Print this help text and exit.
   --bed BED_FILE
       Required BED file with 0-based intervals.
       Expected columns: chrom, start, end, region_name.
   --bam BAM_FILE
-      BAM/CRAM/SAM input. The script runs samtools depth -a -b BED_FILE.
+      BAM/CRAM input. The script runs samtools depth -a -b BED_FILE.
   --depth DEPTH_FILE
       Precomputed depth file input. The script streams this file directly.
       Expected format: chrom, 1-based position, depth.
@@ -42,6 +45,7 @@ GetOptions(
     'thresholds=s' => \$thresholds_str,
     'threads=i'    => \$threads,
     'output=s'     => \$output_file,
+    'help|h'       => \$help,
 ) or die $usage;
 
 $SIG{__WARN__} = sub {
@@ -50,7 +54,7 @@ $SIG{__WARN__} = sub {
     log_warn($message);
 };
 
-if ($num_args == 0) {
+if ($help || $num_args == 0) {
     print $usage;
     exit;
 }
@@ -114,7 +118,7 @@ while (my $rec = <$bed_fh>) {
     $start =~ s/\s+//g;
     $end =~ s/\s+//g;
     fatal("BED file format error: start must be a non-negative integer") unless $start =~ /^\d+$/;
-    fatal("BED file format error: end must be a positive integer") unless $end =~ /^\d+$/;
+    fatal("BED file format error: end must be a non-negative integer") unless $end =~ /^\d+$/;
     fatal("BED file format error: end must be >= start") unless $end >= $start;
     my $total_bases = $end - $start;
     $start += 1;
