@@ -22,7 +22,7 @@ Parameters:
       Required BED file with 0-based intervals.
       Expected columns: chrom, start, end, region_name.
   --bam BAM_FILE
-      BAM/CRAM/SAM input. The script runs samtools depth -a -b BED_FILE.
+      BAM/CRAM input. The script runs samtools depth -a -b BED_FILE.
   --depth DEPTH_FILE
       Precomputed depth file input. The script streams this file directly.
       Expected format: chrom, 1-based position, depth.
@@ -118,7 +118,7 @@ while (my $rec = <$bed_fh>) {
     $start =~ s/\s+//g;
     $end =~ s/\s+//g;
     fatal("BED file format error: start must be a non-negative integer") unless $start =~ /^\d+$/;
-    fatal("BED file format error: end must be a positive integer") unless $end =~ /^\d+$/;
+    fatal("BED file format error: end must be a non-negative integer") unless $end =~ /^\d+$/;
     fatal("BED file format error: end must be >= start") unless $end >= $start;
     my $total_bases = $end - $start;
     $start += 1;
