@@ -27,6 +27,55 @@ Example output from `example/sample.coverage.out.txt`:
 
 Threshold columns depend on `--thresholds`.
 
+## Method and assumptions
+
+Coordinate mapping:
+
+- BED input interval is `[start, end)` in 0-based coordinates.
+- Output start is `start + 1`.
+- Output end is `end`.
+- Region length is `total_bases = end - start`.
+
+Per-region calculations:
+
+- `avg_depth = sum(depth at each position in region) / total_bases`
+- `<threshold>x = count(positions with depth >= threshold)`
+- `<threshold>x(%) = 100 * <threshold>x / total_bases`
+
+Input assumptions:
+
+- One BED file is required.
+- Exactly one depth source is required: `--bam` or `--depth`.
+- Depth rows are `chrom`, `1-based position`, `depth`.
+- BAM/CRAM mode uses `samtools depth -a -b BED_FILE`.
+- Depth file input should be position-sorted.
+
+## Worked example
+
+Input BED:
+
+```tsv
+chr1    0   3   A
+chr1    1   4   B
+```
+
+Input depth:
+
+```tsv
+chr1    1   5
+chr1    2   10
+chr1    3   20
+chr1    4   0
+```
+
+With `--thresholds 10,20`, output is:
+
+```tsv
+ID  chrom   start   end total_bases region  avg_depth   10x 20x 10x(%)  20x(%)
+t   chr1    1   3   3   A   11.67   2   1   66.67   33.33
+t   chr1    2   4   3   B   10.00   2   1   66.67   33.33
+```
+
 ## Empty regions
 
 If BED start equals BED end, `total_bases` is `0`.
