@@ -24,7 +24,7 @@ getBamDepth
 
 ## Manual use
 
-Manual use needs Perl. BAM, SAM, and CRAM input also needs samtools.
+Manual use needs Perl. BAM and CRAM input also needs samtools.
 
 Run from the project directory:
 
