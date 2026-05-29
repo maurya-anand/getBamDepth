@@ -2,7 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
-## [2.0.0] - 2026-05-04
+## [2.0.0] - 2026-05-29
+
+## Added
+
+- Official [documentation](https://getbamdepth.readthedocs.io).
 
 ### Changed
 
