@@ -1,0 +1,13 @@
+:root {
+  --md-text-font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --md-code-font: "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+}
+
+.md-typeset pre > code {
+  white-space: pre;
+}
+
+.md-typeset table {
+  display: block;
+  overflow-x: auto;
+}
