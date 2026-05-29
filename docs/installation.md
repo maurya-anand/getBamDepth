@@ -1,5 +1,13 @@
 # Installation
 
+## Requirements
+
+- Perl.
+- samtools for BAM and CRAM input.
+- mamba or conda for `make install`, `make uninstall`, and test targets.
+
+samtools is not needed when `--depth` input is used.
+
 ## Makefile install
 
 `make install` uses `mamba` when available. Otherwise it uses `conda`.
