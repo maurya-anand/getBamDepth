@@ -1,6 +1,6 @@
 # getBamDepth
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.13356789.svg?branch=main)](https://doi.org/10.5281/zenodo.13356789)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.13356789.svg?v=20260529)](https://doi.org/10.5281/zenodo.13356789)
 [![publish](https://img.shields.io/github/actions/workflow/status/maurya-anand/getBamDepth/release.yml)](https://github.com/maurya-anand/getBamDepth/releases)
 
 This tool calculates the average depth of coverage for regions in a BED file. The depth can come from a BAM or CRAM file using samtools, or from a pre-calculated depth file. For each region, it also counts the bases that meet the depth thresholds you choose.
