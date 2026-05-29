@@ -9,15 +9,14 @@ Full documentation is available at [getbamdepth.readthedocs.io](https://getbamde
 
 ## Requirements
 
-- Perl 5.10 or later
-- samtools (needed only for the `--bam` option)
-- mamba or conda (for the easy install)
+- Recommended (automated installation)
+  - `mamba` or `conda`
 
-If you only use the `--depth` option with a pre-calculated depth file, samtools is not required.
+- Optional (manual installation)
+  - `Perl` 5.x or later
+  - `samtools`
 
 ## Quick Start
-
-Install the conda environment (`bd-env`) with samtools and Perl:
 
 ```bash
 make install
@@ -35,7 +34,7 @@ Run a first command:
 getBamDepth --bed example/example-targets.bed --depth example/sample.depth
 ```
 
-For installation options, inputs, output format, and validation rules, see the [documentation](https://getbamdepth.readthedocs.io).
+For full details on installation, usage, inputs, outputs, and method, see the [documentation](https://getbamdepth.readthedocs.io).
 
 ## Testing
 
