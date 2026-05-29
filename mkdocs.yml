@@ -18,7 +18,6 @@ theme:
     - toc.follow
     - content.code.copy
     - content.tabs.link
-    - content.action.edit
     - search.suggest
     - search.highlight
 nav:
