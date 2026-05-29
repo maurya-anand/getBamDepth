@@ -4,7 +4,6 @@
 
 ```text
 getBamDepth --bed BED_FILE [--bam BAM_FILE | --depth DEPTH_FILE] [--thresholds THRESHOLDS] [--threads INT] [--output FILE]
-getBamDepth --help
 ```
 
 `--bed` is required for coverage calculation.
@@ -16,11 +15,13 @@ Use exactly one depth source:
 
 ## Parameters
 
-Output from `./getBamDepth --help`:
+```bash
+getBamDepth --help
+```
 
 ```text
-Usage: ./getBamDepth --bed BED_FILE [--bam BAM_FILE | --depth DEPTH_FILE] [--thresholds THRESHOLDS] [--threads INT] [--output FILE]
-       ./getBamDepth --help
+Usage: getBamDepth --bed BED_FILE [--bam BAM_FILE | --depth DEPTH_FILE] [--thresholds THRESHOLDS] [--threads INT] [--output FILE]
+       getBamDepth --help
 
 Parameters:
   --help, -h
