@@ -155,14 +155,21 @@ if ($output_file) {
     $out_fh = *STDOUT;
 }
 
-print $out_fh join("\t", @header) . "\n";
-for my $region (@regions) {
-    print $out_fh join("\t", format_region_output($sample, $region)) . "\n";
-}
-
-close $out_fh if $output_file;
 my $destination = $output_file // 'stdout';
-log_info("Done. Output file $destination");
+if ($output_file) {
+    print $out_fh "\n".join("\t", @header) . "\n";
+    for my $region (@regions) {
+        print $out_fh join("\t", format_region_output($sample, $region)) . "\n";
+    }
+    close $out_fh;
+    log_info("Done. Output to $destination");
+} else {
+    log_info("Done. Output to $destination");
+    print $out_fh "\n".join("\t", @header) . "\n";
+    for my $region (@regions) {
+        print $out_fh join("\t", format_region_output($sample, $region)) . "\n";
+    }
+}
 
 sub open_depth_fh {
     my ($bam, $bed, $depth, $thread_count) = @_;
