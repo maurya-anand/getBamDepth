@@ -11,7 +11,7 @@ getBamDepth --help
 
 Use exactly one depth source:
 
-- `--bam` for BAM, SAM, or CRAM input.
+- `--bam` for BAM or CRAM input.
 - `--depth` for a depth file.
 
 ## Parameters
@@ -29,7 +29,7 @@ Parameters:
       Required BED file with 0-based intervals.
       Expected columns: chrom, start, end, region_name.
   --bam BAM_FILE
-      BAM/CRAM/SAM input. The script runs samtools depth -a -b BED_FILE.
+      BAM/CRAM input. The script runs samtools depth -a -b BED_FILE.
   --depth DEPTH_FILE
       Precomputed depth file input. The script streams this file directly.
       Expected format: chrom, 1-based position, depth.
