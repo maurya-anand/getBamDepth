@@ -5,28 +5,29 @@
 
 getBamDepth calculates depth of coverage for regions in a BED file.
 
-The depth can come from a BAM, SAM, or CRAM file. In that mode, getBamDepth runs `samtools depth`. The depth can also come from a depth file made earlier.
+Input requires:
 
-For each BED region, getBamDepth reports average depth. It also reports how many bases reach each depth threshold.
+- One BED file with the regions to measure.
+- One depth source.
 
-## Main features
+The depth source must be one of these:
 
-- Reads target regions from a BED file.
-- Reads depth from an alignment file or from a depth file.
-- Reports one output row for each BED region.
-- Reports average depth for each region.
-- Reports threshold counts and threshold percentages.
-- Supports custom depth thresholds.
+- A BAM, SAM, or CRAM file.
+- A depth file from `samtools depth`.
+
+When the depth source is BAM, SAM, or CRAM, getBamDepth runs `samtools depth`.
+
+For each BED region, getBamDepth reports average depth and depth-threshold counts.
 
 ## Requirements
 
-- Perl 5.10 or later.
+- Perl.
 - samtools for BAM, SAM, and CRAM input.
-- mamba or conda for the `make install` target.
+- mamba or conda for `make install`, `make uninstall`, and test targets.
 
-samtools is not needed when only `--depth` input is used.
+samtools is not needed when `--depth` input is used.
 
-## Documentation pages
+## Pages
 
 - [Installation](installation.md)
 - [Usage](usage.md)
