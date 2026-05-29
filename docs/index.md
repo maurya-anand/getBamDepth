@@ -1,5 +1,8 @@
 # getBamDepth
 
+[![publish](https://img.shields.io/github/actions/workflow/status/maurya-anand/getBamDepth/release.yml)](https://github.com/maurya-anand/getBamDepth/releases)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.13356789.svg)](https://doi.org/10.5281/zenodo.13356789)
+
 getBamDepth calculates the average depth of coverage for regions in a BED file.
 
 You can give it a BAM, SAM, or CRAM file, and it will run samtools to get the depth. You can also give it a depth file that you already made, and it will read that instead. For each region, it also counts how many bases reach the depth thresholds you choose.
@@ -33,6 +36,10 @@ If you only use the `--depth` option with a depth file you made earlier, you do 
 
 ## Citation
 
-If you use this tool, please cite samtools:
+If you use this tool, please cite it through its Zenodo record:
+
+Anand Maurya. (2024). maurya-anand/getBamDepth: v1.0.0 (v1.0.0). Zenodo. [https://doi.org/10.5281/zenodo.13356789](https://doi.org/10.5281/zenodo.13356789)
+
+Please also cite samtools:
 
 Danecek P, Bonfield JK, Liddle J, Marshall J, Ohan V, Pollard MO, Whitwham A, Keane T, McCarthy SA, Davies RM, Li H. Twelve years of SAMtools and BCFtools. GigaScience (2021) 10(2) giab008. [PubMed 33590861](https://pubmed.ncbi.nlm.nih.gov/33590861)
