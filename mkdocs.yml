@@ -1,4 +1,21 @@
 site_name: getBamDepth
 site_url: https://github.com/maurya-anand/getBamDepth
+repo_url: https://github.com/maurya-anand/getBamDepth
 theme:
   name: material
+  features:
+    - navigation.sections
+    - navigation.top
+    - content.code.copy
+nav:
+  - Home: index.md
+  - Installation: installation.md
+  - Usage: usage.md
+  - Inputs: inputs.md
+  - Output: output.md
+  - Validation and errors: validation.md
+markdown_extensions:
+  - admonition
+  - tables
+  - toc:
+      permalink: true
