@@ -18,8 +18,8 @@ BED file rules:
 Example:
 
 ```tsv
-chr1	631032	636027	Gene1	.	+
-chrM	5922	6115	Gene2	.	+
+chr1    631032  636027  Gene1   .   +
+chrM    5922    6115    Gene2   .   +
 ```
 
 The output start is `BED start + 1`.
