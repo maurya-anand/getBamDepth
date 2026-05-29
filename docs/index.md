@@ -12,17 +12,17 @@ Input requires:
 
 The depth source must be one of these:
 
-- A BAM, SAM, or CRAM file.
+- A BAM or CRAM file.
 - A depth file from `samtools depth`.
 
-When the depth source is BAM, SAM, or CRAM, getBamDepth runs `samtools depth`.
+When the depth source is BAM or CRAM, getBamDepth runs `samtools depth`.
 
 For each BED region, getBamDepth reports average depth and depth-threshold counts.
 
 ## Requirements
 
 - Perl.
-- samtools for BAM, SAM, and CRAM input.
+- samtools for BAM and CRAM input.
 - mamba or conda for `make install`, `make uninstall`, and test targets.
 
 samtools is not needed when `--depth` input is used.
@@ -41,6 +41,6 @@ If getBamDepth is used in published work, cite the Zenodo record:
 
 Anand Maurya. (2024). maurya-anand/getBamDepth: v1.0.0 (v1.0.0). Zenodo. [https://doi.org/10.5281/zenodo.13356789](https://doi.org/10.5281/zenodo.13356789)
 
-Also cite samtools when BAM, SAM, or CRAM input is used:
+Please also cite samtools:
 
 Danecek P, Bonfield JK, Liddle J, Marshall J, Ohan V, Pollard MO, Whitwham A, Keane T, McCarthy SA, Davies RM, Li H. Twelve years of SAMtools and BCFtools. GigaScience (2021) 10(2) giab008. [PubMed 33590861](https://pubmed.ncbi.nlm.nih.gov/33590861)
