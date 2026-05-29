@@ -28,7 +28,7 @@ The output start is `BED start + 1`.
 
 Optional.
 
-BAM, SAM, or CRAM input. Use this option instead of `--depth`.
+BAM or CRAM input. Use this option instead of `--depth`.
 
 The input file must exist. One of these index files must also exist:
 
