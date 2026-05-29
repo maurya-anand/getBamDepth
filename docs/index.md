@@ -19,22 +19,6 @@ When the depth source is BAM or CRAM, getBamDepth runs `samtools depth`.
 
 For each BED region, getBamDepth reports average depth and depth-threshold counts.
 
-## Requirements
-
-- Perl.
-- samtools for BAM and CRAM input.
-- mamba or conda for `make install`, `make uninstall`, and test targets.
-
-samtools is not needed when `--depth` input is used.
-
-## Pages
-
-- [Installation](installation.md)
-- [Usage](usage.md)
-- [Inputs](inputs.md)
-- [Output](output.md)
-- [Validation and errors](validation.md)
-
 ## Citation
 
 If getBamDepth is used in published work, cite the Zenodo record:
