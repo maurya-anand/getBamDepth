@@ -3,22 +3,20 @@
 ## Installation methods
 
 1. Recommended: automatic installation with the Makefile.
-2. Alternative (optional): manual install directly from this repository (instead of the recommended Makefile method).
+2. Alternative (optional): manual install section at the end of this page.
 
 ## Which path should I use?
 
 - Use the Makefile path if you want the easiest setup and built-in test/uninstall commands.
-- Use manual install if you only want to run the script directly from a clone.
+- Use the alternative manual path only if you prefer running from the repository without `make install`.
 
 ## Recommended: Automatic install (Makefile)
 
 ### Requirements
 
-- `mamba` or `conda`.
-- Perl.
-- `samtools` for BAM or CRAM input.
+- `mamba` or `conda` available in `PATH`.
 
-If you only use `--depth`, `samtools` is not required at runtime.
+`make install` creates `bd-env` and installs `perl` and `samtools` automatically.
 
 ### Install
 
@@ -65,7 +63,7 @@ make test-full
 
 Manual install runs the script from this project directory and does not run `make install`.
 
-### Requirements
+### Requirements for manual install
 
 - Perl.
 - `samtools` only if you use `--bam` with BAM/CRAM input.
