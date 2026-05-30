@@ -1,7 +1,7 @@
 # getBamDepth
 
 [![publish](https://img.shields.io/github/actions/workflow/status/maurya-anand/getBamDepth/release.yml)](https://github.com/maurya-anand/getBamDepth/releases)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.13356789.svg)](https://doi.org/10.5281/zenodo.13356789)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.13356788.svg)](https://doi.org/10.5281/zenodo.13356788)
 
 getBamDepth calculates depth of coverage for regions in a BED file.
 
@@ -23,7 +23,7 @@ For each BED region, getBamDepth reports average depth and depth-threshold count
 
 If getBamDepth is used in published work, cite the Zenodo record:
 
-Anand Maurya. (2024). maurya-anand/getBamDepth: v1.0.0 (v1.0.0). Zenodo. [https://doi.org/10.5281/zenodo.13356789](https://doi.org/10.5281/zenodo.13356789)
+Anand Maurya. (2026). maurya-anand/getBamDepth. [https://doi.org/10.5281/zenodo.13356788](https://doi.org/10.5281/zenodo.13356788)
 
 Please also cite samtools:
 
