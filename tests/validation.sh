@@ -99,12 +99,13 @@ echo ""
 echo "=========================================="
 echo "VALIDATION SUMMARY"
 echo "=========================================="
+TOTAL=$((PASS + FAIL))
 echo -e "Passed: ${GREEN}$PASS${NC}"
 echo -e "Failed: ${RED}$FAIL${NC}"
 echo ""
 
 if [ $FAIL -eq 0 ]; then
-    echo -e "${GREEN}All 16 validation tests passed! ✓${NC}"
+    echo -e "${GREEN}All ${TOTAL} validation tests passed! ✓${NC}"
     exit 0
 else
     echo -e "${RED}Some tests failed.${NC}"

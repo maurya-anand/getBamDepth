@@ -51,20 +51,21 @@ test:
 		exit 1; \
 	fi
 	@mkdir -p $(TEST_DIR); \
+	set -e; \
 	trap "rm -rf $(TEST_DIR)" EXIT; \
 	echo "Running quick smoke tests..."; \
 	echo ""; \
 	echo "Test 1: Depth file input with default thresholds..."; \
 	$(CONDA) run -n $(ENV_NAME) ./getBamDepth --bed example/example-targets.bed --depth example/sample.depth --output $(TEST_DIR)/test1.txt && \
-	diff $(TEST_DIR)/test1.txt example/sample.coverage.out.txt && echo "[PASS] Test 1 passed" || (echo "[FAIL] Test 1 failed"; exit 1); \
+	diff $(TEST_DIR)/test1.txt example/sample.coverage.out.txt && echo "[PASS] Test 1 passed" || { echo "[FAIL] Test 1 failed"; exit 1; }; \
 	echo ""; \
 	echo "Test 2: CRAM input with default thresholds..."; \
 	$(CONDA) run -n $(ENV_NAME) ./getBamDepth --bed example/example-targets.bed --bam example/sample.cram --output $(TEST_DIR)/test2.txt && \
-	diff $(TEST_DIR)/test2.txt example/sample.coverage.out.txt && echo "[PASS] Test 2 passed" || (echo "[FAIL] Test 2 failed"; exit 1); \
+	diff $(TEST_DIR)/test2.txt example/sample.coverage.out.txt && echo "[PASS] Test 2 passed" || { echo "[FAIL] Test 2 failed"; exit 1; }; \
 	echo ""; \
 	echo "Test 3: BAM input with custom thresholds (5x,10x)..."; \
 	$(CONDA) run -n $(ENV_NAME) ./getBamDepth --bed example/example-targets.bed --bam example/sample.bam --thresholds 5,10 --output $(TEST_DIR)/test3.txt && \
-	grep -q "5x" $(TEST_DIR)/test3.txt && grep -q "10x" $(TEST_DIR)/test3.txt && echo "[PASS] Test 3 passed" || (echo "[FAIL] Test 3 failed"; exit 1); \
+	grep -q "5x" $(TEST_DIR)/test3.txt && grep -q "10x" $(TEST_DIR)/test3.txt && echo "[PASS] Test 3 passed" || { echo "[FAIL] Test 3 failed"; exit 1; }; \
 	echo ""; \
 	echo "All smoke tests passed!"
 
