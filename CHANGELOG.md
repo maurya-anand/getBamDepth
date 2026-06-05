@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ## Added
 
-- Official [documentation] (https://getbamdepth.readthedocs.io).
+- Official [documentation](https://getbamdepth.readthedocs.io).
 
 ### Changed
 
