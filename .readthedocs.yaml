@@ -6,7 +6,7 @@
      python: "3"
    jobs:
      pre_install:
-       - pip install mkdocs-material==9.7.6
+       - pip install "mkdocs-material==9.7.6" "mkdocs>=1.5,<2.0"
 
  mkdocs:
    configuration: mkdocs.yml
